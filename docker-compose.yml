@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: m2k38-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - m2k38-network
+
+  fastapi-ai:
+    build:
+      context: ./ai-backend
+      dockerfile: Dockerfile
+    container_name: m2k38-fastapi
+    ports:
+      - "8000:8000"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    volumes:
+      - ./ai-backend:/app
+    networks:
+      - m2k38-network
+    depends_on:
+      - mongodb
+
+  node-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: m2k38-node-api
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - MONGODB_URI=mongodb://mongodb:27017/mission2k38
+      - FASTAPI_URL=http://fastapi-ai:8000
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - m2k38-network
+    depends_on:
+      - mongodb
+
+  nextjs-web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: m2k38-nextjs
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:5000/api
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - m2k38-network
+    depends_on:
+      - node-api
+      - fastapi-ai
+
+volumes:
+  mongo-data:
+
+networks:
+  m2k38-network:
+    driver: bridge

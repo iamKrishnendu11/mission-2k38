@@ -1,0 +1,7 @@
+# Custom Single-Class Football Dataset Config
+path: ./football_dataset  # dataset root directory
+train: train/images       # train images (relative to 'path')
+val: val/images           # val images (relative to 'path')
+
+nc: 1
+names: ['football']
