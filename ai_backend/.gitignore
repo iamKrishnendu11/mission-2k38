@@ -1,0 +1,25 @@
+# YOLO models
+*.pt
+*.weights
+
+# Video footage
+*.mp4
+*.avi
+*.mov
+
+# Dynamically generated data
+tactical_stats.json
+
+# Python environments and cache
+__pycache__/
+.venv/
+venv/
+
+# Ultralytics output
+runs/
+
+# Environment variables
+.env
+
+# Specific coaching models
+yolo26n-pose.pt

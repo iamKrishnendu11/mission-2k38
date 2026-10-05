@@ -6,29 +6,52 @@ from fastapi import FastAPI, UploadFile, File, HTTPException, Form
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 import shutil
-import os
 import tempfile
 import cv2
 import base64
 import json
 
-from ai_Coach import analyze_shooting
-from dribbling_coach import analyze_dribbling
-from goalkeeper_coach import analyze_goalkeeper
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-app = FastAPI(title="Mission 2038 AI Coach Backend")
+from tactical_llm import generate_tactical_report
+from coaching_modules.ai_Coach import analyze_shooting
+from coaching_modules.dribbling_coach import analyze_dribbling
+from coaching_modules.goalkeeper_coach import analyze_goalkeeper
 
+app = FastAPI(title="Mission 2K38 AI Suite API")
+
+# Add CORS so Next.js frontend can communicate with it
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], 
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 @app.get("/")
-def root():
-    return {"message": "Welcome to Mission 2038 AI Coach API"}
+def read_root():
+    return {"status": "Mission 2K38 AI Suite API is running."}
+
+# --- Tactical CV & LLM Endpoints ---
+
+@app.get("/api/v1/scouting-report")
+def get_scouting_report():
+    json_path = "tactical_stats.json"
+    
+    if not os.path.exists(json_path):
+        raise HTTPException(status_code=404, detail="Tactical stats not found. Please process a video first.")
+        
+    report = generate_tactical_report(json_path)
+    
+    if report.startswith("Error"):
+        raise HTTPException(status_code=500, detail=report)
+        
+    return {"scouting_report": report}
+
+# --- Individual Coaching Endpoints ---
 
 def save_upload_file_tmp(upload_file: UploadFile) -> str:
     try:
@@ -46,6 +69,7 @@ def sse_generator(coach_generator, temp_path):
     try:
         for item in coach_generator:
             if item["type"] == "frame":
+                # Encode frame to JPEG
                 ret, buffer = cv2.imencode('.jpg', item["image"], [int(cv2.IMWRITE_JPEG_QUALITY), 60])
                 if ret:
                     b64 = base64.b64encode(buffer).decode('utf-8')
@@ -57,6 +81,9 @@ def sse_generator(coach_generator, temp_path):
             elif item["type"] == "result":
                 payload = json.dumps({"type": "result", "data": item["data"]})
                 yield f"data: {payload}\n\n"
+    except Exception as e:
+        error_payload = json.dumps({"type": "log", "data": f"Error during processing: {str(e)}"})
+        yield f"data: {error_payload}\n\n"
     finally:
         if os.path.exists(temp_path):
             try:
@@ -64,47 +91,24 @@ def sse_generator(coach_generator, temp_path):
             except Exception as e:
                 print(f"[Warning] Could not delete temp file {temp_path}: {e}")
 
-from pydantic import BaseModel
-import urllib.request
-
-class VideoUrlRequest(BaseModel):
-    video_url: str
-    show_visuals: bool = True
-
-def download_video_from_url(url: str) -> str:
-    try:
-        fd, temp_path = tempfile.mkstemp(suffix=".mp4")
-        os.close(fd)
-        urllib.request.urlretrieve(url, temp_path)
-        return temp_path
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Could not download video from URL: {e}")
-
 @app.post("/analyze/shooting")
-async def process_shooting(file: UploadFile = File(...), show_visuals: bool = Form(True)):
+async def process_shooting(file: UploadFile = File(...), show_visuals: bool = Form(False)):
     temp_path = save_upload_file_tmp(file)
     gen = analyze_shooting(temp_path, show_visuals=show_visuals)
     return StreamingResponse(sse_generator(gen, temp_path), media_type="text/event-stream")
 
 @app.post("/analyze/dribbling")
-async def process_dribbling(file: UploadFile = File(...), show_visuals: bool = Form(True)):
+async def process_dribbling(file: UploadFile = File(...), show_visuals: bool = Form(False)):
     temp_path = save_upload_file_tmp(file)
     gen = analyze_dribbling(temp_path, show_visuals=show_visuals)
     return StreamingResponse(sse_generator(gen, temp_path), media_type="text/event-stream")
 
 @app.post("/analyze/goalkeeper")
-async def process_goalkeeper(file: UploadFile = File(...), show_visuals: bool = Form(True)):
+async def process_goalkeeper(file: UploadFile = File(...), show_visuals: bool = Form(False)):
     temp_path = save_upload_file_tmp(file)
     gen = analyze_goalkeeper(temp_path, show_visuals=show_visuals)
     return StreamingResponse(sse_generator(gen, temp_path), media_type="text/event-stream")
 
-@app.post("/analyze_url/{drill_type}")
-async def process_video_url(drill_type: str, req: VideoUrlRequest):
-    temp_path = download_video_from_url(req.video_url)
-    if drill_type == "goalkeeper":
-        gen = analyze_goalkeeper(temp_path, show_visuals=req.show_visuals)
-    elif drill_type == "dribbling":
-        gen = analyze_dribbling(temp_path, show_visuals=req.show_visuals)
-    else:
-        gen = analyze_shooting(temp_path, show_visuals=req.show_visuals)
-    return StreamingResponse(sse_generator(gen, temp_path), media_type="text/event-stream")
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("api:app", host="0.0.0.0", port=8080, reload=True)
