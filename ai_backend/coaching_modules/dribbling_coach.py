@@ -16,7 +16,7 @@ def get_ollama_feedback(prompt):
         resp = httpx.post(
             f"{ollama_host}/api/generate",
             json={"model": model_name, "prompt": prompt, "stream": False},
-            timeout=15.0
+            timeout=120.0
         )
         if resp.status_code == 200:
             res_json = resp.json()

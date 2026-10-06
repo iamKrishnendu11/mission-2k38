@@ -6,6 +6,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { Play, Video, Loader, Cpu, BarChart2, ShieldAlert, CheckCircle2, Eye, Activity, AlertTriangle, XCircle, Trash2 } from "lucide-react";
 import MorphMatrix from "@/components/MorphMatrix";
 import PerformanceGraph from "@/components/PerformanceGraph";
+import ReactMarkdown from "react-markdown";
 
 export default function AICoachTerminal() {
   const [videos, setVideos] = useState([]);
@@ -17,10 +18,8 @@ export default function AICoachTerminal() {
   const [analysisResult, setAnalysisResult] = useState(null);
   const [loadingAnalysis, setLoadingAnalysis] = useState(false);
   const [error, setError] = useState(null);
-  const [showOverlay, setShowOverlay] = useState(false);
   
   const videoRef = useRef(null);
-  const canvasRef = useRef(null);
   const streamCanvasRef = useRef(null);
   const logsEndRef = useRef(null);
 
@@ -187,165 +186,7 @@ export default function AICoachTerminal() {
     }
   }, [currentFrame]);
 
-  // LIVE BIOMECHANICS SKELETON & TELEMETRY OVERLAY RENDER LOOP
-  useEffect(() => {
-    let animId;
 
-    const renderOverlay = () => {
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
-
-      if (video && canvas && showOverlay && !analyzing) {
-        const ctx = canvas.getContext("2d");
-        const width = video.clientWidth || 640;
-        const height = video.clientHeight || 360;
-
-        canvas.width = width;
-        canvas.height = height;
-        ctx.clearRect(0, 0, width, height);
-
-        const currentTime = video.currentTime || 0;
-        const drillType = selectedVideo?.drillType || "shooting";
-        const stats = analysisResult?.stats || {};
-
-        // Calculate dynamic movement based on video timestamp
-        const t = currentTime;
-        const cycle = (Math.sin(t * 3) + 1) / 2; // 0 to 1
-
-        const centerX = width * 0.5;
-        const centerY = height * 0.52;
-        const scale = Math.min(width, height) * 0.42;
-
-        const head = { x: centerX, y: centerY - scale * 0.5 };
-        const neck = { x: centerX, y: centerY - scale * 0.38 };
-        const leftShoulder = { x: centerX - scale * 0.18, y: centerY - scale * 0.35 };
-        const rightShoulder = { x: centerX + scale * 0.18, y: centerY - scale * 0.35 };
-        
-        const leftElbow = { x: centerX - scale * 0.28 + Math.cos(t * 3) * 10, y: centerY - scale * 0.18 };
-        const rightElbow = { x: centerX + scale * 0.28 - Math.cos(t * 3) * 10, y: centerY - scale * 0.18 };
-        const leftWrist = { x: centerX - scale * 0.32, y: centerY - scale * 0.05 + Math.sin(t * 3) * 15 };
-        const rightWrist = { x: centerX + scale * 0.32, y: centerY - scale * 0.05 - Math.sin(t * 3) * 15 };
-
-        const leftHip = { x: centerX - scale * 0.12, y: centerY };
-        const rightHip = { x: centerX + scale * 0.12, y: centerY };
-
-        const kneeKickingOffset = cycle * scale * 0.22;
-        const leftKnee = { x: centerX - scale * 0.14 - kneeKickingOffset, y: centerY + scale * 0.28 };
-        const rightKnee = { x: centerX + scale * 0.14 + kneeKickingOffset, y: centerY + scale * 0.25 };
-
-        const leftAnkle = { x: centerX - scale * 0.16 - kneeKickingOffset * 1.3, y: centerY + scale * 0.52 };
-        const rightAnkle = { x: centerX + scale * 0.16 + kneeKickingOffset * 1.4, y: centerY + scale * 0.5 };
-
-        // 1. PURPLE BOUNDING BOX (MATCHING MEDIAPIPE AI VISION SPEC)
-        const bboxX = centerX - scale * 0.45;
-        const bboxY = centerY - scale * 0.55;
-        const bboxW = scale * 0.9;
-        const bboxH = scale * 1.1;
-
-        ctx.strokeStyle = "#a855f7"; // Solid Purple/Magenta
-        ctx.lineWidth = 2.5;
-        ctx.strokeRect(bboxX, bboxY, bboxW, bboxH);
-
-        // Bounding Box Label Badge
-        ctx.fillStyle = "#a855f7";
-        ctx.fillRect(bboxX, bboxY - 18, 140, 18);
-        ctx.fillStyle = "#ffffff";
-        ctx.font = "bold 9px monospace";
-        ctx.fillText("GOALKEEPER DETECTED 99%", bboxX + 6, bboxY - 5);
-
-        // 2. CONNECTED SKELETON LIMBS (SOLID WHITE LINES MATCHING MEDIAPIPE SPEC)
-        const limbConnections = [
-          [leftShoulder, rightShoulder],
-          [leftShoulder, leftHip],
-          [rightShoulder, rightHip],
-          [leftHip, rightHip],
-          [leftShoulder, leftElbow],
-          [leftElbow, leftWrist],
-          [rightShoulder, rightElbow],
-          [rightElbow, rightWrist],
-          [leftHip, leftKnee],
-          [leftKnee, leftAnkle],
-          [rightHip, rightKnee],
-          [rightKnee, rightAnkle],
-          [head, neck],
-          [neck, leftShoulder],
-          [neck, rightShoulder]
-        ];
-
-        ctx.strokeStyle = "#ffffff"; // Solid White Limbs
-        ctx.lineWidth = 2.5;
-        limbConnections.forEach(([p1, p2]) => {
-          ctx.beginPath();
-          ctx.moveTo(p1.x, p1.y);
-          ctx.lineTo(p2.x, p2.y);
-          ctx.stroke();
-        });
-
-        // 3. JOINTS (SOLID RED CIRCLES WITH WHITE OUTLINE MATCHING MEDIAPIPE SPEC)
-        const joints = [head, neck, leftShoulder, rightShoulder, leftElbow, rightElbow, leftWrist, rightWrist, leftHip, rightHip, leftKnee, rightKnee, leftAnkle, rightAnkle];
-        joints.forEach((joint) => {
-          ctx.beginPath();
-          ctx.arc(joint.x, joint.y, 5.5, 0, Math.PI * 2);
-          ctx.fillStyle = "#dc2626"; // Solid Red
-          ctx.fill();
-          ctx.strokeStyle = "#ffffff"; // White Outline
-          ctx.lineWidth = 1.5;
-          ctx.stroke();
-        });
-
-        // 4. JOINT ANGLE TELEMETRY BADGES
-        const drawAngleBadge = (joint, label, angleVal) => {
-          ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
-          ctx.strokeStyle = "#22c55e";
-          ctx.lineWidth = 1;
-          ctx.fillRect(joint.x + 10, joint.y - 10, 85, 20);
-          ctx.strokeRect(joint.x + 10, joint.y - 10, 85, 20);
-          
-          ctx.fillStyle = "#ffffff";
-          ctx.font = "bold 9px sans-serif";
-          ctx.fillText(`${label}: ${typeof angleVal === 'number' ? angleVal.toFixed(1) : angleVal}°`, joint.x + 14, joint.y + 3);
-        };
-
-        const kneeAngle = 75 + cycle * 40;
-        const elbowAngle = 140 - cycle * 30;
-        drawAngleBadge(rightKnee, "KNEE FLEX", stats.knee_flexion_deg || kneeAngle);
-        drawAngleBadge(rightElbow, "ELBOW EXT", elbowAngle);
-
-        // 5. BALL HIGHLIGHT (BRIGHT YELLOW / ORANGE RING MATCHING MEDIAPIPE SPEC)
-        if (drillType === "shooting" || drillType === "goalkeeper") {
-          const ballX = centerX + scale * 0.38 + (cycle * scale * 0.45);
-          const ballY = centerY + scale * 0.28 - (Math.sin(cycle * Math.PI) * scale * 0.35);
-
-          ctx.beginPath();
-          ctx.arc(ballX, ballY, 11, 0, Math.PI * 2);
-          ctx.fillStyle = "#f59e0b"; // Bright Yellow / Orange
-          ctx.fill();
-          ctx.strokeStyle = "#ea580c";
-          ctx.lineWidth = 2.5;
-          ctx.stroke();
-
-          ctx.beginPath();
-          ctx.arc(ballX, ballY, 4, 0, Math.PI * 2);
-          ctx.fillStyle = "#ffffff";
-          ctx.fill();
-        }
-
-        // 6. TOP HUD STATS BAR
-        ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
-        ctx.fillRect(10, 10, 270, 22);
-        ctx.fillStyle = "#a855f7";
-        ctx.font = "bold 9px monospace";
-        ctx.fillText("MEDIAPIPE: 33 JOINTS | YOLO BALL TELEMETRY", 16, 24);
-
-        ctx.restore();
-      }
-
-      animId = requestAnimationFrame(renderOverlay);
-    };
-
-    animId = requestAnimationFrame(renderOverlay);
-    return () => cancelAnimationFrame(animId);
-  }, [showOverlay, selectedVideo, analysisResult, analyzing]);
 
   return (
     <DashboardLayout>
@@ -358,18 +199,6 @@ export default function AICoachTerminal() {
               Execute MediaPipe joint tracking and YOLO ball telemetry on uploads
             </p>
           </div>
-
-          <button
-            onClick={() => setShowOverlay(!showOverlay)}
-            className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2 border ${
-              showOverlay
-                ? "bg-yellow-400/20 text-yellow-400 border-yellow-400/40"
-                : "bg-zinc-900 text-zinc-400 border-zinc-800"
-            }`}
-          >
-            <Activity className="w-4 h-4" />
-            <span>AI Biomechanics HUD: {showOverlay ? "ON ✓" : "OFF"}</span>
-          </button>
         </div>
 
         {/* MAIN TERMINAL GRID (FIXED LAYOUT) */}
@@ -497,10 +326,6 @@ export default function AICoachTerminal() {
                       playsInline
                       className="w-full h-full object-contain bg-black"
                     />
-                    <canvas
-                      ref={canvasRef}
-                      className="absolute inset-0 w-full h-full pointer-events-none"
-                    />
                   </div>
                 ) : (
                   <div className="text-center p-6 text-zinc-650 space-y-3">
@@ -554,8 +379,22 @@ export default function AICoachTerminal() {
                       <h3 className="text-xs font-black uppercase tracking-widest text-zinc-400 border-b border-zinc-800 pb-3 flex items-center gap-2">
                         <Cpu className="text-yellow-400 w-4.5 h-4.5" /> Elite Coach AI Verdict & Action Plan
                       </h3>
-                      <div className="bg-zinc-950/60 p-5 rounded-2xl border border-zinc-850 leading-relaxed text-zinc-300 text-sm whitespace-pre-line font-medium">
-                        {analysisResult.report}
+                      <div className="bg-zinc-950/60 p-5 rounded-2xl border border-zinc-850 leading-relaxed text-zinc-300 text-sm font-medium">
+                        <ReactMarkdown 
+                          components={{
+                            h1: ({node, ...props}) => <h1 className="text-lg font-black text-white uppercase tracking-wider mb-2 mt-4" {...props} />,
+                            h2: ({node, ...props}) => <h2 className="text-md font-bold text-yellow-400 uppercase tracking-wide mb-2 mt-4" {...props} />,
+                            h3: ({node, ...props}) => <h3 className="text-sm font-bold text-white mb-2 mt-3" {...props} />,
+                            p: ({node, ...props}) => <p className="mb-3 last:mb-0 text-zinc-300" {...props} />,
+                            ul: ({node, ...props}) => <ul className="list-disc pl-5 mb-3 space-y-1 marker:text-yellow-400" {...props} />,
+                            ol: ({node, ...props}) => <ol className="list-decimal pl-5 mb-3 space-y-1 marker:text-yellow-400" {...props} />,
+                            li: ({node, ...props}) => <li className="text-zinc-300" {...props} />,
+                            strong: ({node, ...props}) => <strong className="text-yellow-400 font-bold" {...props} />,
+                            blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-yellow-400 pl-3 italic text-zinc-400 mb-3" {...props} />,
+                          }}
+                        >
+                          {analysisResult.report}
+                        </ReactMarkdown>
                       </div>
                     </div>
 
