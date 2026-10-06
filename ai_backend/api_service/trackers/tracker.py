@@ -64,13 +64,19 @@ class Tracker:
             cls_names = detection.names
             cls_names_inv = {v:k for k,v in cls_names.items()}
 
+            # Handle generic models (like yolov8n.pt) mapping
+            player_id = cls_names_inv.get('player', cls_names_inv.get('person', -1))
+            referee_id = cls_names_inv.get('referee', -1)
+            ball_id = cls_names_inv.get('ball', cls_names_inv.get('sports ball', -1))
+
             # Covert to supervision Detection format
             detection_supervision = sv.Detections.from_ultralytics(detection)
 
-            # Convert GoalKeeper to player object
-            for object_ind , class_id in enumerate(detection_supervision.class_id):
-                if cls_names[class_id] == "goalkeeper":
-                    detection_supervision.class_id[object_ind] = cls_names_inv["player"]
+            # Convert GoalKeeper to player object if goalkeeper exists
+            if "goalkeeper" in cls_names_inv and player_id != -1:
+                for object_ind, class_id in enumerate(detection_supervision.class_id):
+                    if cls_names[class_id] == "goalkeeper":
+                        detection_supervision.class_id[object_ind] = player_id
 
             # Track Objects
             detection_with_tracks = self.tracker.update_with_detections(detection_supervision)
@@ -84,20 +90,22 @@ class Tracker:
                 cls_id = frame_detection[3]
                 track_id = frame_detection[4]
 
-                if cls_id == cls_names_inv['player']:
+                if cls_id == player_id:
                     tracks["players"][frame_num][track_id] = {"bbox":bbox}
                 
-                if cls_id == cls_names_inv['referee']:
+                if cls_id == referee_id:
                     tracks["referees"][frame_num][track_id] = {"bbox":bbox}
             
             for frame_detection in detection_supervision:
                 bbox = frame_detection[0].tolist()
                 cls_id = frame_detection[3]
 
-                if cls_id == cls_names_inv['ball']:
+                if cls_id == ball_id:
                     tracks["ball"][frame_num][1] = {"bbox":bbox}
 
         if stub_path is not None:
+            import os
+            os.makedirs(os.path.dirname(stub_path), exist_ok=True)
             with open(stub_path,'wb') as f:
                 pickle.dump(tracks,f)
 
@@ -175,8 +183,14 @@ class Tracker:
         # Get the number of time each team had ball control
         team_1_num_frames = team_ball_control_till_frame[team_ball_control_till_frame==1].shape[0]
         team_2_num_frames = team_ball_control_till_frame[team_ball_control_till_frame==2].shape[0]
-        team_1 = team_1_num_frames/(team_1_num_frames+team_2_num_frames)
-        team_2 = team_2_num_frames/(team_1_num_frames+team_2_num_frames)
+        
+        total_frames = team_1_num_frames + team_2_num_frames
+        if total_frames > 0:
+            team_1 = team_1_num_frames / total_frames
+            team_2 = team_2_num_frames / total_frames
+        else:
+            team_1 = 0.5
+            team_2 = 0.5
 
         cv2.putText(frame, f"Team 1 Ball Control: {team_1*100:.2f}%",(1400,900), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 3)
         cv2.putText(frame, f"Team 2 Ball Control: {team_2*100:.2f}%",(1400,950), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 3)

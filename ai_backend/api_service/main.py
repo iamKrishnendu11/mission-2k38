@@ -9,15 +9,40 @@ from view_transformer import ViewTransformer
 from speed_and_distance_estimator import SpeedAndDistance_Estimator
 
 
+import argparse
+from utils import read_video, save_video
+from trackers import Tracker
+import cv2
+import numpy as np
+from team_assigner import TeamAssigner
+from player_ball_assigner import PlayerBallAssigner
+from camera_movement_estimator import CameraMovementEstimator
+from view_transformer import ViewTransformer
+from speed_and_distance_estimator import SpeedAndDistance_Estimator
+
+
 def main():
+    parser = argparse.ArgumentParser(description="Offline 11v11 Match Tactical Tracking")
+    parser.add_argument("--input", type=str, default="input_videos/08fd33_4.mp4", help="Path to input video")
+    parser.add_argument("--no-stub", action="store_true", help="Do not use cached stubs, force recalculation")
+    args = parser.parse_args()
+
+    print(f"Loading video: {args.input}")
     # Read Video
-    video_frames = read_video('input_videos/08fd33_4.mp4')
+    video_frames = read_video(args.input)
 
     # Initialize Tracker
-    tracker = Tracker('models/best.pt')
+    model_path = 'models/best.pt'
+    import os
+    if not os.path.exists(model_path):
+        print(f"WARNING: {model_path} not found. Falling back to generic yolov8n.pt")
+        model_path = 'yolov8n.pt'
+    
+    tracker = Tracker(model_path)
 
+    use_stub = not args.no_stub
     tracks = tracker.get_object_tracks(video_frames,
-                                       read_from_stub=True,
+                                       read_from_stub=use_stub,
                                        stub_path='stubs/track_stubs.pkl')
     # Get object positions 
     tracker.add_position_to_tracks(tracks)
@@ -25,7 +50,7 @@ def main():
     # camera movement estimator
     camera_movement_estimator = CameraMovementEstimator(video_frames[0])
     camera_movement_per_frame = camera_movement_estimator.get_camera_movement(video_frames,
-                                                                                read_from_stub=True,
+                                                                                read_from_stub=use_stub,
                                                                                 stub_path='stubs/camera_movement_stub.pkl')
     camera_movement_estimator.add_adjust_positions_to_tracks(tracks,camera_movement_per_frame)
 
@@ -117,31 +142,38 @@ def main():
     
     for frame_num, player_track in enumerate(tracks['players']):
         for player_id, track in player_track.items():
-            if player_id not in player_stats:
-                player_stats[player_id] = {
-                    "id": player_id,
-                    "team": track.get('team', 0),
+            player_id_int = int(player_id)
+            if player_id_int not in player_stats:
+                player_stats[player_id_int] = {
+                    "id": player_id_int,
+                    "team": int(track.get('team', 0)),
                     "top_speed_kmh": 0.0,
                     "distance_covered_m": 0.0,
                     "time_on_ball_s": 0.0
                 }
             
             # Update top speed
-            current_speed = track.get('speed', 0.0)
-            if current_speed > player_stats[player_id]["top_speed_kmh"]:
-                player_stats[player_id]["top_speed_kmh"] = round(current_speed, 2)
+            current_speed = float(track.get('speed', 0.0))
+            if current_speed > player_stats[player_id_int]["top_speed_kmh"]:
+                player_stats[player_id_int]["top_speed_kmh"] = round(current_speed, 2)
                 
             # Update max distance covered (it is a running total in the track)
-            current_distance = track.get('distance', 0.0)
-            if current_distance > player_stats[player_id]["distance_covered_m"]:
-                player_stats[player_id]["distance_covered_m"] = round(current_distance, 2)
+            current_distance = float(track.get('distance', 0.0))
+            if current_distance > player_stats[player_id_int]["distance_covered_m"]:
+                player_stats[player_id_int]["distance_covered_m"] = round(current_distance, 2)
     
     # Add time on ball
     for player_id, frames in individual_ball_control.items():
-        if player_id in player_stats:
-            player_stats[player_id]["time_on_ball_s"] = round(frames / fps, 2)
+        player_id_int = int(player_id)
+        if player_id_int in player_stats:
+            player_stats[player_id_int]["time_on_ball_s"] = round(float(frames) / fps, 2)
             
-    tactical_stats["players"] = list(player_stats.values())
+    players_list = list(player_stats.values())
+    # Filter out crowd/static people: must have moved
+    players_list = [p for p in players_list if p["distance_covered_m"] > 5.0]
+    # Sort by distance and keep the top 22 (the actual players on the pitch)
+    players_list = sorted(players_list, key=lambda x: x["distance_covered_m"], reverse=True)[:22]
+    tactical_stats["players"] = players_list
     
     with open('tactical_stats.json', 'w') as f:
         json.dump(tactical_stats, f, indent=4)
