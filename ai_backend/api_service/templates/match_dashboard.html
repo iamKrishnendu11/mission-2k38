@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>11v11 Match Tactical Scouting</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        zinc: {
+                            850: '#202022',
+                            950: '#09090b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-zinc-950 text-zinc-300 font-sans p-6 min-h-screen">
+    <div class="max-w-7xl mx-auto space-y-8">
+        
+        <!-- Header -->
+        <div class="border-b border-zinc-800 pb-4">
+            <h1 class="text-3xl font-black uppercase text-white tracking-widest flex items-center gap-3">
+                <span class="text-yellow-400">⚡</span> 11v11 Match Tactical Scouting
+            </h1>
+            <p class="text-zinc-500 text-xs mt-2 uppercase tracking-widest font-bold">End-to-End Integration Test Interface</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <!-- SECTION A: MATCH PLAYBACK & UPLOAD -->
+            <div class="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-6 shadow-xl space-y-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-sm font-black uppercase tracking-widest text-zinc-400 flex items-center gap-2">
+                        <span class="text-blue-400">▶</span> Match Playback
+                    </h2>
+                    
+                    <!-- UPLOAD BUTTON (PLAIN FOR MAX COMPATIBILITY) -->
+                    <input type="file" accept="video/*" id="video-upload" class="bg-zinc-800 text-white text-xs px-3 py-1.5 rounded-lg border border-zinc-700 cursor-pointer" />
+                </div>
+                <div class="aspect-video bg-black rounded-xl overflow-hidden border border-zinc-800 flex flex-col items-center justify-center relative">
+                    <p class="text-zinc-600 text-xs font-bold uppercase tracking-widest absolute z-0" id="video-placeholder">[Annotated Video Stream Placeholder]</p>
+                    
+                    <div id="video-loading" class="absolute inset-0 bg-zinc-950/90 z-20 hidden flex-col items-center justify-center space-y-3">
+                        <div class="w-8 h-8 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
+                        <p class="text-yellow-400/90 text-xs font-bold uppercase tracking-widest animate-pulse text-center px-4">Running YOLO Match Tracking<br/>(this takes 1–2 minutes)...</p>
+                    </div>
+
+                    <video id="video-player" class="w-full h-full object-contain hidden z-10" controls></video>
+                </div>
+            </div>
+
+            <!-- SECTION B: KEY METRICS PANEL -->
+            <div class="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-6 shadow-xl space-y-6 flex flex-col">
+                <h2 class="text-sm font-black uppercase tracking-widest text-zinc-400 flex items-center gap-2">
+                    <span class="text-green-400">📊</span> Key Metrics Panel
+                </h2>
+
+                <!-- Possession Bar -->
+                <div class="space-y-2">
+                    <div class="flex justify-between text-xs font-bold uppercase tracking-widest">
+                        <span class="text-white">Team 1 Possession (<span id="t1-pos">--%</span>)</span>
+                        <span class="text-white">Team 2 Possession (<span id="t2-pos">--%</span>)</span>
+                    </div>
+                    <div class="w-full h-3 bg-zinc-800 rounded-full overflow-hidden flex">
+                        <div id="t1-bar" class="h-full bg-blue-500 transition-all duration-1000" style="width: 50%"></div>
+                        <div id="t2-bar" class="h-full bg-red-500 transition-all duration-1000" style="width: 50%"></div>
+                    </div>
+                </div>
+
+                <!-- Player Stats Table -->
+                <div class="flex-1 overflow-auto rounded-xl border border-zinc-800 scrollbar-thin">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-zinc-900 text-zinc-500 uppercase tracking-wider sticky top-0">
+                            <tr>
+                                <th class="px-4 py-3 font-black">Player ID</th>
+                                <th class="px-4 py-3 font-black">Team</th>
+                                <th class="px-4 py-3 font-black">Top Speed</th>
+                                <th class="px-4 py-3 font-black">Distance</th>
+                                <th class="px-4 py-3 font-black">Time on Ball</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stats-body" class="divide-y divide-zinc-800/50">
+                            <tr><td colspan="5" class="px-4 py-6 text-center text-zinc-600 italic">Loading stats...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION C: AI TACTICAL ASSISTANT -->
+        <div class="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-6 shadow-xl space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-zinc-800 pb-4">
+                <h2 class="text-sm font-black uppercase tracking-widest text-zinc-400 flex items-center gap-2">
+                    <span class="text-yellow-400">🤖</span> AI Tactical Assistant
+                </h2>
+                <button id="generate-btn" class="bg-gradient-to-r from-yellow-400 to-amber-500 text-black px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider hover:scale-[1.02] active:scale-95 transition-all shadow-lg flex items-center gap-2">
+                    Generate Tactical Counter-Strategy
+                </button>
+            </div>
+
+            <div id="report-container" class="min-h-[150px] bg-zinc-950/60 p-5 rounded-xl border border-zinc-850 leading-relaxed text-zinc-300 text-sm font-medium whitespace-pre-line hidden">
+            </div>
+            
+            <div id="loading-state" class="min-h-[150px] flex-col items-center justify-center space-y-3 hidden">
+                <div class="w-8 h-8 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
+                <p class="text-yellow-400/80 text-xs font-bold uppercase tracking-widest animate-pulse">Ollama LLM processing prompt...</p>
+            </div>
+            
+            <div id="empty-state" class="min-h-[150px] flex items-center justify-center">
+                <p class="text-zinc-600 text-xs uppercase font-bold tracking-widest">Click the button above to generate a tactical report.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Fetch Stats Logic
+        async function fetchStats() {
+            try {
+                const res = await fetch('/api/v1/match-stats');
+                if (!res.ok) throw new Error("Failed to fetch stats");
+                const data = await res.json();
+                
+                // Update Possession
+                const t1pos = data.team_possession?.team_1 || "50%";
+                const t2pos = data.team_possession?.team_2 || "50%";
+                document.getElementById('t1-pos').innerText = t1pos;
+                document.getElementById('t2-pos').innerText = t2pos;
+                document.getElementById('t1-bar').style.width = t1pos;
+                document.getElementById('t2-bar').style.width = t2pos;
+
+                // Update Table
+                const tbody = document.getElementById('stats-body');
+                tbody.innerHTML = '';
+                if (data.players && data.players.length > 0) {
+                    data.players.sort((a,b) => b.distance_covered_m - a.distance_covered_m).forEach(p => {
+                        const tr = document.createElement('tr');
+                        tr.className = "hover:bg-zinc-800/30 transition-colors";
+                        tr.innerHTML = `
+                            <td class="px-4 py-3 font-bold text-white">#${p.id}</td>
+                            <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-[10px] font-black uppercase ${p.team === 1 ? 'bg-blue-500/20 text-blue-400' : 'bg-red-500/20 text-red-400'}">Team ${p.team}</span></td>
+                            <td class="px-4 py-3 text-yellow-400 font-bold">${p.top_speed_kmh} km/h</td>
+                            <td class="px-4 py-3">${p.distance_covered_m} m</td>
+                            <td class="px-4 py-3 text-zinc-400">${p.time_on_ball_s > 0 ? p.time_on_ball_s + ' s' : '-'}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-6 text-center text-zinc-600 italic">No player data available.</td></tr>`;
+                }
+            } catch (err) {
+                document.getElementById('stats-body').innerHTML = `<tr><td colspan="5" class="px-4 py-6 text-center text-red-500 italic">Error loading stats.</td></tr>`;
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            // Initial fetch
+            await fetchStats();
+
+            // Handle Video Upload (Send to Backend)
+            const videoUploadInput = document.getElementById('video-upload');
+            if (videoUploadInput) {
+                videoUploadInput.addEventListener('change', async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    
+                    const player = document.getElementById('video-player');
+                    const placeholder = document.getElementById('video-placeholder');
+                    const loading = document.getElementById('video-loading');
+                    const generateBtn = document.getElementById('generate-btn');
+                    
+                    // Show Loading Overlay
+                    placeholder.classList.add('hidden');
+                    player.classList.add('hidden');
+                    loading.classList.remove('hidden');
+                    loading.classList.add('flex');
+                    generateBtn.disabled = true;
+
+                    const formData = new FormData();
+                    formData.append('video', file);
+
+                    try {
+                        const res = await fetch('/api/v1/process-match-video', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        if (!res.ok) {
+                            const err = await res.json();
+                            throw new Error(err.detail || "Failed to process video");
+                        }
+                        
+                        // Successfully processed, now fetch fresh stats
+                        await fetchStats();
+                        
+                        // Show client-side preview now
+                        const url = URL.createObjectURL(file);
+                        player.src = url;
+                        player.classList.remove('hidden');
+                        
+                    } catch (error) {
+                        alert("Error processing video: " + error.message);
+                        placeholder.classList.remove('hidden');
+                    } finally {
+                        loading.classList.add('hidden');
+                        loading.classList.remove('flex');
+                        generateBtn.disabled = false;
+                    }
+                });
+            }
+        });
+
+        // Generate Report
+        document.getElementById('generate-btn').addEventListener('click', async () => {
+            const btn = document.getElementById('generate-btn');
+            const container = document.getElementById('report-container');
+            const loading = document.getElementById('loading-state');
+            const empty = document.getElementById('empty-state');
+            
+            btn.disabled = true;
+            btn.classList.add("opacity-50", "cursor-not-allowed");
+            
+            empty.classList.add("hidden");
+            container.classList.add("hidden");
+            loading.classList.remove("hidden");
+            loading.classList.add("flex");
+
+            try {
+                const res = await fetch('/api/v1/scouting-report');
+                if (!res.ok) {
+                    const errObj = await res.json();
+                    throw new Error(errObj.detail || "Server error");
+                }
+                const data = await res.json();
+                
+                container.innerText = data.scouting_report || "Report generated but is empty.";
+                
+                loading.classList.add("hidden");
+                loading.classList.remove("flex");
+                container.classList.remove("hidden");
+                
+            } catch (err) {
+                loading.classList.add("hidden");
+                loading.classList.remove("flex");
+                container.classList.remove("hidden");
+                container.innerHTML = `<span class="text-red-400">⚠️ Error generating report: ${err.message}</span>`;
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove("opacity-50", "cursor-not-allowed");
+            }
+        });
+    </script>
+</body>
+</html>

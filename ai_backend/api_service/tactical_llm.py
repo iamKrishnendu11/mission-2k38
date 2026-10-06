@@ -18,7 +18,7 @@ Keep your response concise, structured, and easy to read for coaches.
 
     url = "http://localhost:11434/api/generate"
     payload = {
-        "model": "llama3.2:3b",
+        "model": "llama3.2",
         "prompt": prompt,
         "stream": False
     }

@@ -3,7 +3,7 @@ os.environ["GLOG_minloglevel"] = "3"
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, HTMLResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 import shutil
 import tempfile
@@ -36,13 +36,38 @@ def read_root():
     return {"status": "Mission 2K38 AI Suite API is running."}
 
 # --- Tactical CV & LLM Endpoints ---
+import subprocess
+
+@app.post("/api/v1/process-match-video")
+async def process_match_video(video: UploadFile = File(...)):
+    temp_dir = os.path.join(os.path.dirname(__file__), "temp_uploads")
+    os.makedirs(temp_dir, exist_ok=True)
+    
+    file_path = os.path.join(temp_dir, video.filename)
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(video.file, buffer)
+        
+    try:
+        cmd = [sys.executable, "main.py", "--input", file_path, "--no-stub"]
+        result = subprocess.run(cmd, capture_output=True, text=True, cwd=os.path.dirname(__file__))
+        
+        if result.returncode != 0:
+            raise HTTPException(status_code=500, detail=f"CV Pipeline Failed:\n{result.stderr}\n{result.stdout}")
+            
+        return {"status": "completed", "message": "Analysis finished and tactical_stats.json generated."}
+        
+    except Exception as e:
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=500, detail=f"Error executing pipeline: {str(e)}")
 
 @app.get("/api/v1/scouting-report")
 def get_scouting_report():
-    json_path = "tactical_stats.json"
-    
+    json_path = os.path.join(os.path.dirname(__file__), "..", "tactical_stats.json")
     if not os.path.exists(json_path):
-        raise HTTPException(status_code=404, detail="Tactical stats not found. Please process a video first.")
+        json_path = os.path.join(os.path.dirname(__file__), "tactical_stats.json")
+        if not os.path.exists(json_path):
+            raise HTTPException(status_code=404, detail="Tactical stats not found. Please process a video first.")
         
     report = generate_tactical_report(json_path)
     
@@ -149,6 +174,27 @@ async def process_url_goalkeeper(request: AnalyzeUrlRequest):
     temp_path = await download_video_to_tmp(request.video_url)
     gen = analyze_goalkeeper(temp_path, show_visuals=request.show_visuals)
     return StreamingResponse(sse_generator(gen, temp_path), media_type="text/event-stream")
+
+@app.get("/match-dashboard", response_class=HTMLResponse)
+async def get_match_dashboard():
+    html_path = os.path.join(os.path.dirname(__file__), "templates", "match_dashboard.html")
+    if not os.path.exists(html_path):
+        raise HTTPException(status_code=404, detail="Dashboard template not found.")
+    with open(html_path, "r", encoding="utf-8") as f:
+        return f.read()
+
+@app.get("/api/v1/match-stats")
+async def get_match_stats():
+    json_path = os.path.join(os.path.dirname(__file__), "..", "tactical_stats.json")
+    if not os.path.exists(json_path):
+        # Fallback to local dir if running from api_service directly
+        json_path = os.path.join(os.path.dirname(__file__), "tactical_stats.json")
+        if not os.path.exists(json_path):
+            raise HTTPException(status_code=404, detail="Tactical stats not found. Please process a video first.")
+    
+    with open(json_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    return data
 
 if __name__ == "__main__":
     import uvicorn
