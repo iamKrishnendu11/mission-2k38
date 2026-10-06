@@ -10,14 +10,14 @@ import {
 import { TrendingUp, Award, Flame, Zap } from "lucide-react";
 
 export default function PlayerAnalytics() {
-  const [profile, setProfile] = useState(null);
+  const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    api.get("/dashboard/profile")
+    api.get("/dashboard/player/dashboard")
       .then(res => {
-        setProfile(res);
+        setDashboardData(res);
         setLoading(false);
       })
       .catch(err => {
@@ -48,6 +48,7 @@ export default function PlayerAnalytics() {
     );
   }
 
+  const { profile = {}, analyses = [] } = dashboardData || {};
   const { skills = {} } = profile;
 
   // Radar chart data structure
@@ -61,13 +62,18 @@ export default function PlayerAnalytics() {
     { subject: "Stamina", A: skills.stamina || 60, B: 52, fullMark: 100 },
   ];
 
-  // Trajectory history mockup (simulating weekly sessions)
-  const trajectoryData = [
-    { week: "Week 1", rating: 55 },
-    { week: "Week 2", rating: 56 },
-    { week: "Week 3", rating: 57 },
-    { week: "Week 4", rating: skills.aiScore || 60 },
-  ];
+  // Trajectory history using real AI analyses
+  const trajectoryData = analyses.length > 0 ? 
+    [...analyses].reverse().map((a, i) => {
+      // Use consistency_percent or similar metric from AI stats
+      let score = 50; 
+      if (a.stats) {
+        if (a.stats.consistency_percent !== undefined) score = a.stats.consistency_percent;
+        else if (a.stats.control_rating !== undefined) score = a.stats.control_rating;
+      }
+      return { session: `S${i + 1}`, rating: score };
+    })
+    : [{ session: "No Sessions", rating: 0 }];
 
   return (
     <DashboardLayout>
@@ -139,7 +145,7 @@ export default function PlayerAnalytics() {
                       <stop offset="95%" stopColor="#facc15" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <XAxis dataKey="week" stroke="#71717a" fontSize={10} fontWeight="bold" />
+                  <XAxis dataKey="session" stroke="#71717a" fontSize={10} fontWeight="bold" />
                   <YAxis stroke="#71717a" domain={[40, 100]} fontSize={10} fontWeight="bold" />
                   <Tooltip 
                     contentStyle={{ backgroundColor: '#09090b', borderColor: '#27272a' }}

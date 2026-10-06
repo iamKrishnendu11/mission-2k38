@@ -335,17 +335,16 @@ export default function PlayerDashboard() {
               <h3 className="text-xl font-black uppercase text-white">{profile?.name}</h3>
               <p className="text-zinc-400 text-xs mt-1 uppercase font-bold tracking-wider">{profile?.preferredPosition} • {profile?.currentClub || "Free Agent"}</p>
 
-              {/* Skill stats radar ratings mockup */}
+              {/* AI Skill Stats Assessment */}
               <div className="mt-8 grid grid-cols-2 gap-4">
                 {(() => {
-                  const isRated = (profile?.skills?.scoutRatingsCount || 0) > 0;
                   return [
-                    { label: "Overall", val: isRated ? (profile?.skills?.scoutScore || profile?.skills?.overallScore || 0) : 0 },
-                    { label: "Speed", val: isRated ? (profile?.skills?.speed || 0) : 0 },
-                    { label: "Passing", val: isRated ? (profile?.skills?.passing || 0) : 0 },
-                    { label: "Dribbling", val: isRated ? (profile?.skills?.dribbling || 0) : 0 },
-                    { label: "Finishing", val: isRated ? (profile?.skills?.finishing || profile?.skills?.shooting || 0) : 0 },
-                    { label: "Potential", val: isRated ? (profile?.skills?.potential || 0) : 0 },
+                    { label: "AI Score", val: profile?.skills?.aiScore || profile?.skills?.overallScore || 0 },
+                    { label: "Speed", val: profile?.skills?.speed || 0 },
+                    { label: "Passing", val: profile?.skills?.passing || 0 },
+                    { label: "Dribbling", val: profile?.skills?.dribbling || 0 },
+                    { label: "Finishing", val: profile?.skills?.finishing || profile?.skills?.shooting || 0 },
+                    { label: "Defending", val: profile?.skills?.defending || 0 },
                   ].map((s) => (
                     <div key={s.label} className="bg-zinc-950/80 p-3 rounded-xl border border-zinc-900 text-left">
                       <span className="block text-[9px] uppercase tracking-widest text-zinc-500 font-bold">{s.label}</span>

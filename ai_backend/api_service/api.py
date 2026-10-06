@@ -109,6 +109,47 @@ async def process_goalkeeper(file: UploadFile = File(...), show_visuals: bool = 
     gen = analyze_goalkeeper(temp_path, show_visuals=show_visuals)
     return StreamingResponse(sse_generator(gen, temp_path), media_type="text/event-stream")
 
+from pydantic import BaseModel
+import httpx
+
+class AnalyzeUrlRequest(BaseModel):
+    video_url: str
+    show_visuals: bool = False
+
+async def download_video_to_tmp(url: str) -> str:
+    try:
+        suffix = os.path.splitext(url.split("?")[0])[1]
+        if not suffix:
+            suffix = ".mp4"
+        fd, temp_path = tempfile.mkstemp(suffix=suffix)
+        async with httpx.AsyncClient() as client:
+            async with client.stream("GET", url) as response:
+                response.raise_for_status()
+                with os.fdopen(fd, 'wb') as f:
+                    async for chunk in response.aiter_bytes():
+                        f.write(chunk)
+        return temp_path
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Could not download video: {e}")
+
+@app.post("/analyze_url/shooting")
+async def process_url_shooting(request: AnalyzeUrlRequest):
+    temp_path = await download_video_to_tmp(request.video_url)
+    gen = analyze_shooting(temp_path, show_visuals=request.show_visuals)
+    return StreamingResponse(sse_generator(gen, temp_path), media_type="text/event-stream")
+
+@app.post("/analyze_url/dribbling")
+async def process_url_dribbling(request: AnalyzeUrlRequest):
+    temp_path = await download_video_to_tmp(request.video_url)
+    gen = analyze_dribbling(temp_path, show_visuals=request.show_visuals)
+    return StreamingResponse(sse_generator(gen, temp_path), media_type="text/event-stream")
+
+@app.post("/analyze_url/goalkeeper")
+async def process_url_goalkeeper(request: AnalyzeUrlRequest):
+    temp_path = await download_video_to_tmp(request.video_url)
+    gen = analyze_goalkeeper(temp_path, show_visuals=request.show_visuals)
+    return StreamingResponse(sse_generator(gen, temp_path), media_type="text/event-stream")
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("api:app", host="0.0.0.0", port=8080, reload=True)
