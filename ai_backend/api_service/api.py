@@ -38,8 +38,8 @@ def read_root():
 # --- Tactical CV & LLM Endpoints ---
 import subprocess
 
-@app.post("/api/v1/process-match-video")
-async def process_match_video(video: UploadFile = File(...)):
+@app.post("/api/v1/upload-match-video")
+async def upload_match_video(video: UploadFile = File(...)):
     temp_dir = os.path.join(os.path.dirname(__file__), "temp_uploads")
     os.makedirs(temp_dir, exist_ok=True)
     
@@ -47,19 +47,36 @@ async def process_match_video(video: UploadFile = File(...)):
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(video.file, buffer)
         
-    try:
-        cmd = [sys.executable, "main.py", "--input", file_path, "--no-stub"]
-        result = subprocess.run(cmd, capture_output=True, text=True, cwd=os.path.dirname(__file__))
+    # Delete stale stats so the frontend doesn't load old data while polling
+    json_path = os.path.join(os.path.dirname(__file__), "tactical_stats.json")
+    if os.path.exists(json_path):
+        os.remove(json_path)
         
-        if result.returncode != 0:
-            raise HTTPException(status_code=500, detail=f"CV Pipeline Failed:\n{result.stderr}\n{result.stdout}")
-            
-        return {"status": "completed", "message": "Analysis finished and tactical_stats.json generated."}
+    return {"filename": video.filename}
+
+@app.get("/api/v1/stream-match-video")
+def stream_match_video(filename: str):
+    file_path = os.path.join(os.path.dirname(__file__), "temp_uploads", filename)
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Video file not found")
         
-    except Exception as e:
-        if isinstance(e, HTTPException):
-            raise e
-        raise HTTPException(status_code=500, detail=f"Error executing pipeline: {str(e)}")
+    def generate():
+        # Removed --no-stub so the cached ML models are used for instant streaming!
+        cmd = [sys.executable, "main.py", "--input", file_path, "--stream"]
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=os.path.dirname(__file__))
+        
+        try:
+            while True:
+                chunk = process.stdout.read(8192)
+                if not chunk:
+                    break
+                yield chunk
+        finally:
+            process.stdout.close()
+            process.stderr.close()
+            process.wait()
+
+    return StreamingResponse(generate(), media_type="multipart/x-mixed-replace; boundary=frame")
 
 @app.get("/api/v1/scouting-report")
 def get_scouting_report():
@@ -70,6 +87,30 @@ def get_scouting_report():
             raise HTTPException(status_code=404, detail="Tactical stats not found. Please process a video first.")
         
     report = generate_tactical_report(json_path)
+    
+    if report.startswith("Error"):
+        raise HTTPException(status_code=500, detail=report)
+        
+    return {"scouting_report": report}
+
+from pydantic import BaseModel
+from typing import List, Dict, Any
+
+class MatchupRequest(BaseModel):
+    target_opponent_team: int
+    my_team_data: List[Dict[str, Any]]
+
+from tactical_llm import generate_matchup_report
+
+@app.post("/api/v1/scouting-matchup")
+def get_scouting_matchup(request: MatchupRequest):
+    json_path = os.path.join(os.path.dirname(__file__), "..", "tactical_stats.json")
+    if not os.path.exists(json_path):
+        json_path = os.path.join(os.path.dirname(__file__), "tactical_stats.json")
+        if not os.path.exists(json_path):
+            raise HTTPException(status_code=404, detail="Tactical stats not found. Please process a video first.")
+        
+    report = generate_matchup_report(json_path, request.my_team_data, request.target_opponent_team)
     
     if report.startswith("Error"):
         raise HTTPException(status_code=500, detail=report)
