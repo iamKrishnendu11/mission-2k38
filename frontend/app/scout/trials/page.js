@@ -8,6 +8,7 @@ import {
   Calendar, MapPin, Clock, FileText, Plus, Shield, Users, Lock, Glob,
   CheckCircle2, AlertCircle, Search, UserCheck, X, Check, Eye, Sliders, Trash2
 } from "lucide-react";
+import { SlidingButton } from "@/app/login/components/SlidingButton";
 
 import { io as ioClient } from "socket.io-client";
 
@@ -342,22 +343,23 @@ export default function ScoutTrials() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-7xl mx-auto space-y-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-zinc-850 pb-6">
+      <div className="max-w-5xl mx-auto space-y-8 px-4 md:px-0">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-white/[0.04] pb-6 pt-10">
           <div>
-            <h2 className="text-3xl font-black uppercase text-white tracking-wider">Scouting Trials Manager</h2>
-            <p className="text-zinc-400 text-xs mt-1 uppercase tracking-widest font-bold">
+            <h2 className="text-3xl font-black text-white tracking-tight flex items-center gap-3">
+              Scouting Trials Manager
+            </h2>
+            <p className="text-white/50 text-sm mt-1 font-medium">
               Schedule public trials or invite specific players to private evaluations
             </p>
           </div>
 
-          <button
+          <SlidingButton
             onClick={() => setShowModal(true)}
-            className="bg-gradient-to-r from-yellow-400 to-amber-500 text-black font-black uppercase tracking-wider px-6 py-3 rounded-xl text-xs hover:scale-105 transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(250,204,21,0.25)]"
+            className="h-14 px-8 font-black uppercase tracking-widest text-sm"
           >
-            <Plus className="w-4 h-4 stroke-[3]" />
-            <span>Schedule New Trial</span>
-          </button>
+            + Schedule New Trial
+          </SlidingButton>
         </div>
 
         {success && (
@@ -667,14 +669,18 @@ export default function ScoutTrials() {
             <span className="text-xs text-zinc-500 uppercase tracking-widest font-bold">Loading scheduled trials...</span>
           </div>
         ) : trials.length === 0 ? (
-          <div className="p-12 bg-zinc-900/35 border border-zinc-800 rounded-3xl text-center text-zinc-500 text-xs space-y-3">
-            <p>No scouting trials scheduled yet.</p>
-            <button
+          <div className="py-24 flex flex-col items-center justify-center text-center bg-[#121214] border border-white/[0.04] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] rounded-[32px]">
+            <div className="w-14 h-14 bg-white/[0.02] border border-white/[0.05] rounded-full flex items-center justify-center mb-4">
+              <Calendar className="w-6 h-6 text-white/20" />
+            </div>
+            <h4 className="text-sm font-bold text-white/70 mb-1">No Scouting Trials</h4>
+            <p className="text-xs font-medium text-white/40 max-w-sm mb-6">No scouting trials scheduled yet.</p>
+            <SlidingButton
               onClick={() => setShowModal(true)}
-              className="text-yellow-400 font-bold hover:underline text-xs uppercase tracking-wider"
+              className="h-12 px-6 font-black uppercase tracking-widest text-[11px]"
             >
-              + Schedule Your First Trial
-            </button>
+              Schedule Your First Trial
+            </SlidingButton>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

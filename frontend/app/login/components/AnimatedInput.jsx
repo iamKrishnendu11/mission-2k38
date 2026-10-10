@@ -26,7 +26,7 @@ export default function AnimatedInput({
           value={value}
           onChange={onChange}
           placeholder={label}
-          className="peer w-full bg-transparent pb-4 pr-8 text-lg text-white outline-none placeholder:text-zinc-600"
+          className="peer w-full bg-transparent pb-4 pr-8 text-lg text-white outline-none placeholder:text-zinc-600 [&:-webkit-autofill]:shadow-[inset_0_0_0px_1000px_black] [&:-webkit-autofill]:[-webkit-text-fill-color:white]"
         />
         {isPassword && (
           <button

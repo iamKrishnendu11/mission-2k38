@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import AnimatedInput from "./AnimatedInput";
-import MagneticButton from "./MagneticButton";
+import { SlidingButton } from "./SlidingButton";
 
 export default function LoginScene({ role, onBack }) {
   const root = useRef(null);
@@ -76,10 +76,18 @@ export default function LoginScene({ role, onBack }) {
 
   return (
     <section ref={root} className="relative flex min-h-screen overflow-hidden bg-black w-full">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(250,204,21,.12),transparent_60%)]" />
+      {/* Removed radial gradient to ensure pure black background on the right side */}
       <div className="relative hidden lg:flex w-1/2 items-end justify-center overflow-hidden">
-        <Image src={role.image} alt={role.title} width={900} height={1000}
-          className="login-character h-[90vh] w-auto object-contain" />
+        <div 
+          className="relative h-[90vh] w-auto pointer-events-none"
+          style={{
+            WebkitMaskImage: 'radial-gradient(circle at 50% 45%, black 25%, rgba(0,0,0,0.15) 90%)',
+            maskImage: 'radial-gradient(circle at 50% 45%, black 25%, rgba(0,0,0,0.15) 90%)'
+          }}
+        >
+          <Image src={role.image} alt={role.title} width={900} height={1000}
+            className="login-character h-full w-auto object-contain opacity-80" />
+        </div>
       </div>
 
       <div className="relative flex w-full lg:w-1/2 items-center px-8 md:px-16 py-12">
@@ -143,9 +151,9 @@ export default function LoginScene({ role, onBack }) {
           </div>
 
           <div className="login-reveal mt-8 flex flex-col sm:flex-row items-center gap-6">
-            <MagneticButton type="submit" onClick={handleLogin} className={loading ? "opacity-75 pointer-events-none" : ""}>
+            <SlidingButton type="submit" onClick={handleLogin} className={loading ? "opacity-75 pointer-events-none" : ""}>
               {loading ? "ENTERING..." : "ENTER THE PITCH"}
-            </MagneticButton>
+            </SlidingButton>
             
             <button
               type="button"

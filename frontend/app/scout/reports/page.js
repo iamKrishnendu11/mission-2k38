@@ -7,6 +7,7 @@ import {
   FileText, Plus, Search, ShieldCheck, MapPin, Calendar, 
   Award, Trash2, CheckCircle2, AlertCircle, X, Sparkles, User
 } from "lucide-react";
+import { SlidingButton } from "@/app/login/components/SlidingButton";
 
 export default function ScoutReportsPage() {
   const [reports, setReports] = useState([]);
@@ -107,27 +108,28 @@ export default function ScoutReportsPage() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-7xl mx-auto space-y-8">
+      <div className="max-w-5xl mx-auto space-y-8 px-4 md:px-0">
         {/* Page Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-zinc-850 pb-6">
-          <div>
-            <div className="flex items-center gap-2">
-              <FileText className="w-7 h-7 text-yellow-400" />
-              <h2 className="text-3xl font-black uppercase text-white tracking-wider">Scout Reports</h2>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-white/[0.04] pb-6 pt-10">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-gradient-to-b from-white/[0.06] to-transparent border border-white/[0.05] rounded-2xl flex items-center justify-center shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] shrink-0">
+              <FileText className="w-6 h-6 text-yellow-400 drop-shadow-md" />
             </div>
-            <p className="text-zinc-400 text-xs mt-1 uppercase tracking-widest font-bold">
-              Official scouting evaluations, tactical dossiers, and talent observation notes
-            </p>
+            <div>
+              <h2 className="text-3xl font-black text-white tracking-tight">Scout Reports</h2>
+              <p className="text-white/50 text-sm mt-1 font-medium">
+                Official scouting evaluations, tactical dossiers, and talent observation notes
+              </p>
+            </div>
           </div>
 
           {currentUser?.role === "scout" && (
-            <button
+            <SlidingButton
               onClick={() => setShowCreateModal(true)}
-              className="bg-gradient-to-r from-yellow-400 to-amber-500 text-black font-black uppercase text-xs px-5 py-3 rounded-xl hover:scale-105 transition-all shadow-lg flex items-center gap-2"
+              className="h-14 px-8 font-black uppercase tracking-widest text-sm"
             >
-              <Plus className="w-4 h-4 text-black" />
-              <span>Create Scout Report</span>
-            </button>
+              + Create Scout Report
+            </SlidingButton>
           )}
         </div>
 
@@ -138,28 +140,28 @@ export default function ScoutReportsPage() {
             <span className="text-xs text-zinc-500 uppercase tracking-widest font-bold">Loading Scout Reports...</span>
           </div>
         ) : reports.length === 0 ? (
-          <div className="p-12 bg-zinc-900/35 border border-zinc-800 rounded-3xl text-center space-y-4">
-            <FileText className="w-12 h-12 text-zinc-600 mx-auto" />
-            <div className="space-y-1">
-              <h3 className="text-white font-bold text-base uppercase">No Scout Reports Found</h3>
-              <p className="text-zinc-500 text-xs max-w-md mx-auto">
-                {currentUser?.role === "scout" 
-                  ? "You haven't generated any official scouting reports yet. Click below to evaluate saved prospects!" 
-                  : "No official scout reports have been filed for your profile yet."}
-              </p>
+          <div className="py-24 flex flex-col items-center justify-center text-center bg-[#121214] border border-white/[0.04] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] rounded-[32px]">
+            <div className="w-14 h-14 bg-white/[0.02] border border-white/[0.05] rounded-full flex items-center justify-center mb-4">
+              <FileText className="w-6 h-6 text-white/20" />
             </div>
+            <h4 className="text-sm font-bold text-white/70 mb-1">No Scout Reports Found</h4>
+            <p className="text-xs font-medium text-white/40 max-w-sm mb-6">
+              {currentUser?.role === "scout" 
+                ? "You haven't generated any official scouting reports yet. Click below to evaluate saved prospects!" 
+                : "No official scout reports have been filed for your profile yet."}
+            </p>
             {currentUser?.role === "scout" && (
-              <button
+              <SlidingButton
                 onClick={() => setShowCreateModal(true)}
-                className="bg-yellow-400 text-black font-black uppercase text-xs px-5 py-2.5 rounded-xl hover:scale-105 transition-all shadow-md inline-flex items-center gap-2"
+                className="h-12 px-6 font-black uppercase tracking-widest text-[11px]"
               >
-                <Plus className="w-4 h-4" /> Create First Report
-              </button>
+                Create First Report
+              </SlidingButton>
             )}
           </div>
         ) : (
           /* Reports Grid */
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
             {reports.map((r) => (
               <div key={r._id} className="bg-zinc-950 border border-zinc-800 hover:border-yellow-400/50 rounded-3xl p-6 relative overflow-hidden transition-all shadow-xl space-y-5">
                 {/* Header */}
