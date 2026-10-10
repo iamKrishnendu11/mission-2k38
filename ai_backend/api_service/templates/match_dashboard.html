@@ -49,10 +49,11 @@
                     
                     <div id="video-loading" class="absolute inset-0 bg-zinc-950/90 z-20 hidden flex-col items-center justify-center space-y-3">
                         <div class="w-8 h-8 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
-                        <p class="text-yellow-400/90 text-xs font-bold uppercase tracking-widest animate-pulse text-center px-4">Running YOLO Match Tracking<br/>(this takes 1–2 minutes)...</p>
+                        <p id="loading-text" class="text-yellow-400/90 text-xs font-bold uppercase tracking-widest animate-pulse text-center px-4">Tracking Match...<br/>(Video will stream below when ready)</p>
                     </div>
 
                     <video id="video-player" class="w-full h-full object-contain hidden z-10" controls></video>
+                    <img id="mjpeg-player" class="w-full h-full object-contain hidden z-10" />
                 </div>
             </div>
 
@@ -100,9 +101,23 @@
                 <h2 class="text-sm font-black uppercase tracking-widest text-zinc-400 flex items-center gap-2">
                     <span class="text-yellow-400">🤖</span> AI Tactical Assistant
                 </h2>
-                <button id="generate-btn" class="bg-gradient-to-r from-yellow-400 to-amber-500 text-black px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider hover:scale-[1.02] active:scale-95 transition-all shadow-lg flex items-center gap-2">
-                    Generate Tactical Counter-Strategy
-                </button>
+                <div class="flex items-center gap-3">
+                    <select id="target-team-select" class="bg-zinc-800 text-zinc-300 text-xs px-3 py-2.5 rounded-xl border border-zinc-700 outline-none">
+                        <option value="1">Target Opponent: Team 1</option>
+                        <option value="2">Target Opponent: Team 2</option>
+                    </select>
+                    <button id="generate-btn" class="bg-gradient-to-r from-yellow-400 to-amber-500 text-black px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider hover:scale-[1.02] active:scale-95 transition-all shadow-lg flex items-center gap-2">
+                        Generate 1v1 Matchup Strategy
+                    </button>
+                </div>
+            </div>
+
+            <!-- My Team Roster Preview -->
+            <div class="bg-zinc-950/60 p-4 rounded-xl border border-zinc-850 mb-4">
+                <h3 class="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-3">Your Scouting Roster (Mock Data)</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3" id="roster-grid">
+                    <!-- Populated via JS -->
+                </div>
             </div>
 
             <div id="report-container" class="min-h-[150px] bg-zinc-950/60 p-5 rounded-xl border border-zinc-850 leading-relaxed text-zinc-300 text-sm font-medium whitespace-pre-line hidden">
@@ -160,25 +175,59 @@
             }
         }
 
+        // Mock dataset of our 11 players for testing
+        const myTeamRoster = [
+            { id: 1, position: "GK", name: "Alisson", stats: { top_speed_kmh: 22.1, stamina: 90, playstyle: "Sweeper Keeper" } },
+            { id: 2, position: "CB", name: "Van Dijk", stats: { top_speed_kmh: 31.4, stamina: 85, playstyle: "Aerial Threat" } },
+            { id: 3, position: "CB", name: "Konate", stats: { top_speed_kmh: 32.5, stamina: 80, playstyle: "Aggressive Stopper" } },
+            { id: 4, position: "RB", name: "Arnold", stats: { top_speed_kmh: 29.8, stamina: 88, playstyle: "Playmaker" } },
+            { id: 5, position: "LB", name: "Robertson", stats: { top_speed_kmh: 30.1, stamina: 95, playstyle: "Box to Box" } },
+            { id: 6, position: "CDM", name: "Endo", stats: { top_speed_kmh: 28.5, stamina: 92, playstyle: "Ball Winner" } },
+            { id: 7, position: "CM", name: "Mac Allister", stats: { top_speed_kmh: 27.9, stamina: 89, playstyle: "Deep Lying Playmaker" } },
+            { id: 8, position: "CM", name: "Szoboszlai", stats: { top_speed_kmh: 34.1, stamina: 94, playstyle: "Mezzala" } },
+            { id: 9, position: "RW", name: "Salah", stats: { top_speed_kmh: 34.8, stamina: 85, playstyle: "Inside Forward" } },
+            { id: 10, position: "LW", name: "Diaz", stats: { top_speed_kmh: 35.2, stamina: 87, playstyle: "Dribbler" } },
+            { id: 11, position: "ST", name: "Nunez", stats: { top_speed_kmh: 36.5, stamina: 88, playstyle: "Target Man / Chaos" } }
+        ];
+
         document.addEventListener("DOMContentLoaded", async () => {
+            // Render Roster UI
+            const grid = document.getElementById('roster-grid');
+            if (grid) {
+                grid.innerHTML = myTeamRoster.map(p => `
+                    <div class="bg-zinc-900 border border-zinc-800 p-3 rounded-lg flex flex-col justify-between">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="font-bold text-zinc-200 text-sm">${p.name}</span>
+                            <span class="text-[10px] bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded">${p.position}</span>
+                        </div>
+                        <div class="text-[10px] text-zinc-500 space-y-1">
+                            <div>Speed: <span class="text-zinc-300">${p.stats.top_speed_kmh} km/h</span></div>
+                            <div class="truncate" title="${p.stats.playstyle}">Style: <span class="text-zinc-300">${p.stats.playstyle}</span></div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
             // Initial fetch
             await fetchStats();
 
-            // Handle Video Upload (Send to Backend)
+            // Handle Video Upload & Stream
             const videoUploadInput = document.getElementById('video-upload');
             if (videoUploadInput) {
                 videoUploadInput.addEventListener('change', async (e) => {
                     const file = e.target.files[0];
                     if (!file) return;
                     
-                    const player = document.getElementById('video-player');
+                    const mjpegPlayer = document.getElementById('mjpeg-player');
+                    const videoPlayer = document.getElementById('video-player');
                     const placeholder = document.getElementById('video-placeholder');
                     const loading = document.getElementById('video-loading');
                     const generateBtn = document.getElementById('generate-btn');
                     
-                    // Show Loading Overlay
+                    // Reset UI
                     placeholder.classList.add('hidden');
-                    player.classList.add('hidden');
+                    videoPlayer.classList.add('hidden');
+                    mjpegPlayer.classList.add('hidden');
                     loading.classList.remove('hidden');
                     loading.classList.add('flex');
                     generateBtn.disabled = true;
@@ -187,30 +236,44 @@
                     formData.append('video', file);
 
                     try {
-                        const res = await fetch('/api/v1/process-match-video', {
+                        // 1. Upload video to get a tracking job started
+                        const res = await fetch('/api/v1/upload-match-video', {
                             method: 'POST',
                             body: formData
                         });
                         
                         if (!res.ok) {
                             const err = await res.json();
-                            throw new Error(err.detail || "Failed to process video");
+                            throw new Error(err.detail || "Failed to upload video");
                         }
                         
-                        // Successfully processed, now fetch fresh stats
-                        await fetchStats();
+                        const data = await res.json();
                         
-                        // Show client-side preview now
-                        const url = URL.createObjectURL(file);
-                        player.src = url;
-                        player.classList.remove('hidden');
+                        // 2. Start the MJPEG stream
+                        // The stream will take ~2 minutes to buffer as it processes YOLO
+                        mjpegPlayer.src = `/api/v1/stream-match-video?filename=${data.filename}`;
+                        
+                        // We hide the spinner as soon as the first image chunk arrives
+                        mjpegPlayer.onload = () => {
+                            loading.classList.add('hidden');
+                            loading.classList.remove('flex');
+                            mjpegPlayer.classList.remove('hidden');
+                        };
+                        
+                        // Fallback polling for stats while streaming
+                        const pollInterval = setInterval(async () => {
+                            try {
+                                await fetchStats();
+                                // if stats loaded, stream is likely finished
+                            } catch(e) {}
+                        }, 10000); // Check every 10s
                         
                     } catch (error) {
                         alert("Error processing video: " + error.message);
                         placeholder.classList.remove('hidden');
-                    } finally {
                         loading.classList.add('hidden');
                         loading.classList.remove('flex');
+                    } finally {
                         generateBtn.disabled = false;
                     }
                 });
@@ -223,6 +286,7 @@
             const container = document.getElementById('report-container');
             const loading = document.getElementById('loading-state');
             const empty = document.getElementById('empty-state');
+            const targetTeam = parseInt(document.getElementById('target-team-select').value);
             
             btn.disabled = true;
             btn.classList.add("opacity-50", "cursor-not-allowed");
@@ -233,14 +297,26 @@
             loading.classList.add("flex");
 
             try {
-                const res = await fetch('/api/v1/scouting-report');
+                const res = await fetch('/api/v1/scouting-matchup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        target_opponent_team: targetTeam,
+                        my_team_data: myTeamRoster
+                    })
+                });
                 if (!res.ok) {
                     const errObj = await res.json();
                     throw new Error(errObj.detail || "Server error");
                 }
                 const data = await res.json();
                 
-                container.innerText = data.scouting_report || "Report generated but is empty.";
+                // Parse markdown nicely or fallback to raw text
+                try {
+                    container.innerHTML = marked.parse(data.scouting_report);
+                } catch {
+                    container.innerText = data.scouting_report || "Report generated but is empty.";
+                }
                 
                 loading.classList.add("hidden");
                 loading.classList.remove("flex");
