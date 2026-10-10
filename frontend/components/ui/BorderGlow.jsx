@@ -65,10 +65,21 @@ const BorderGlow = ({
   fillOpacity = 0.5,
 }) => {
   const cardRef = useRef(null);
+  
+  // Refs for direct DOM manipulation to bypass heavy React re-renders on every mouse move
+  const borderLayerRef = useRef(null);
+  const fillLayerRef = useRef(null);
+  const glowLayerRef = useRef(null);
+  const rafRef = useRef(null);
+  const isVisibleRef = useRef(false);
+
   const [isHovered, setIsHovered] = useState(false);
-  const [cursorAngle, setCursorAngle] = useState(45);
-  const [edgeProximity, setEdgeProximity] = useState(0);
   const [sweepActive, setSweepActive] = useState(false);
+
+  // Cached static gradients
+  const meshGradients = buildMeshGradients(colors);
+  const borderBg = meshGradients.map(g => `${g} border-box`).join(', ');
+  const fillBg = meshGradients.map(g => `${g} padding-box`).join(', ');
 
   const getCenterOfElement = useCallback((el) => {
     const { width, height } = el.getBoundingClientRect();
@@ -97,15 +108,70 @@ const BorderGlow = ({
     return degrees;
   }, [getCenterOfElement]);
 
+  // Update styles directly in the DOM
+  const updateLayers = useCallback((angle, prox, forceVisible = null) => {
+    const visible = forceVisible !== null ? forceVisible : isVisibleRef.current;
+    const colorSensitivity = edgeSensitivity + 20;
+    const borderOpacity = visible
+      ? Math.max(0, (prox * 100 - colorSensitivity) / (100 - colorSensitivity))
+      : 0;
+    const glowOp = visible
+      ? Math.max(0, (prox * 100 - edgeSensitivity) / (100 - edgeSensitivity))
+      : 0;
+
+    const angleDeg = `${angle.toFixed(3)}deg`;
+
+    if (borderLayerRef.current) {
+      borderLayerRef.current.style.opacity = borderOpacity;
+      borderLayerRef.current.style.maskImage = `conic-gradient(from ${angleDeg} at center, black ${coneSpread}%, transparent ${coneSpread + 15}%, transparent ${100 - coneSpread - 15}%, black ${100 - coneSpread}%)`;
+      borderLayerRef.current.style.WebkitMaskImage = borderLayerRef.current.style.maskImage;
+    }
+    
+    if (fillLayerRef.current) {
+      fillLayerRef.current.style.opacity = borderOpacity * fillOpacity;
+      fillLayerRef.current.style.maskImage = [
+        'linear-gradient(to bottom, black, black)',
+        'radial-gradient(ellipse at 50% 50%, black 40%, transparent 65%)',
+        'radial-gradient(ellipse at 66% 66%, black 5%, transparent 40%)',
+        'radial-gradient(ellipse at 33% 33%, black 5%, transparent 40%)',
+        'radial-gradient(ellipse at 66% 33%, black 5%, transparent 40%)',
+        'radial-gradient(ellipse at 33% 66%, black 5%, transparent 40%)',
+        `conic-gradient(from ${angleDeg} at center, transparent 5%, black 15%, black 85%, transparent 95%)`,
+      ].join(', ');
+      fillLayerRef.current.style.WebkitMaskImage = fillLayerRef.current.style.maskImage;
+    }
+
+    if (glowLayerRef.current) {
+      glowLayerRef.current.style.opacity = glowOp;
+      glowLayerRef.current.style.maskImage = `conic-gradient(from ${angleDeg} at center, black 2.5%, transparent 10%, transparent 90%, black 97.5%)`;
+      glowLayerRef.current.style.WebkitMaskImage = glowLayerRef.current.style.maskImage;
+    }
+  }, [coneSpread, edgeSensitivity, fillOpacity]);
+
   const handlePointerMove = useCallback((e) => {
     const card = cardRef.current;
     if (!card) return;
-    const rect = card.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    setEdgeProximity(getEdgeProximity(card, x, y));
-    setCursorAngle(getCursorAngle(card, x, y));
-  }, [getEdgeProximity, getCursorAngle]);
+    
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      const prox = getEdgeProximity(card, x, y);
+      const angle = getCursorAngle(card, x, y);
+      updateLayers(angle, prox, true);
+    });
+  }, [getEdgeProximity, getCursorAngle, updateLayers]);
+
+  useEffect(() => {
+    isVisibleRef.current = isHovered || sweepActive;
+    if (!isHovered && !sweepActive) {
+      if (borderLayerRef.current) borderLayerRef.current.style.opacity = 0;
+      if (fillLayerRef.current) fillLayerRef.current.style.opacity = 0;
+      if (glowLayerRef.current) glowLayerRef.current.style.opacity = 0;
+    }
+  }, [isHovered, sweepActive]);
 
   useEffect(() => {
     if (!animated) return;
@@ -114,39 +180,32 @@ const BorderGlow = ({
 
     const timeout = setTimeout(() => {
       setSweepActive(true);
-      setCursorAngle(angleStart);
+      let currentAngle = angleStart;
+      let currentProx = 0;
 
-      animateValue({ duration: 500, onUpdate: v => setEdgeProximity(v / 100) });
-      animateValue({ ease: easeInCubic, duration: 1500, end: 50, onUpdate: v => {
-        setCursorAngle((angleEnd - angleStart) * (v / 100) + angleStart);
+      animateValue({ duration: 500, onUpdate: v => {
+        currentProx = v / 100;
+        updateLayers(currentAngle, currentProx, true);
       }});
-      animateValue(
-        { ease: easeOutCubic, delay: 1500, duration: 2250, start: 50, end: 100, onUpdate: v => {
-          setCursorAngle((angleEnd - angleStart) * (v / 100) + angleStart);
-        }}
-      );
+      animateValue({ ease: easeInCubic, duration: 1500, end: 50, onUpdate: v => {
+        currentAngle = (angleEnd - angleStart) * (v / 100) + angleStart;
+        updateLayers(currentAngle, currentProx, true);
+      }});
+      animateValue({ ease: easeOutCubic, delay: 1500, duration: 2250, start: 50, end: 100, onUpdate: v => {
+        currentAngle = (angleEnd - angleStart) * (v / 100) + angleStart;
+        updateLayers(currentAngle, currentProx, true);
+      }});
       animateValue({ ease: easeInCubic, delay: 2500, duration: 1500, start: 100, end: 0,
-        onUpdate: v => setEdgeProximity(v / 100),
+        onUpdate: v => {
+          currentProx = v / 100;
+          updateLayers(currentAngle, currentProx, true);
+        },
         onEnd: () => setSweepActive(false),
       });
     }, 0);
 
     return () => clearTimeout(timeout);
-  }, [animated]);
-
-  const colorSensitivity = edgeSensitivity + 20;
-  const isVisible = isHovered || sweepActive;
-  const borderOpacity = isVisible
-    ? Math.max(0, (edgeProximity * 100 - colorSensitivity) / (100 - colorSensitivity))
-    : 0;
-  const glowOpacity = isVisible
-    ? Math.max(0, (edgeProximity * 100 - edgeSensitivity) / (100 - edgeSensitivity))
-    : 0;
-
-  const meshGradients = buildMeshGradients(colors);
-  const borderBg = meshGradients.map(g => `${g} border-box`);
-  const fillBg = meshGradients.map(g => `${g} padding-box`);
-  const angleDeg = `${cursorAngle.toFixed(3)}deg`;
+  }, [animated, updateLayers]);
 
   return (
     <div
@@ -154,68 +213,52 @@ const BorderGlow = ({
       onPointerMove={handlePointerMove}
       onPointerEnter={() => setIsHovered(true)}
       onPointerLeave={() => setIsHovered(false)}
-      className={`relative overflow-hidden isolate border border-white/15 ${className}`}
+      className={`relative isolate border border-white/15 ${className}`}
       style={{
         background: backgroundColor,
         borderRadius: `${borderRadius}px`,
         transform: 'translate3d(0, 0, 0.01px)',
         boxShadow: 'rgba(0,0,0,0.1) 0 1px 2px, rgba(0,0,0,0.1) 0 2px 4px, rgba(0,0,0,0.1) 0 4px 8px, rgba(0,0,0,0.1) 0 8px 16px, rgba(0,0,0,0.1) 0 16px 32px, rgba(0,0,0,0.1) 0 32px 64px',
       }}>
-      {/* mesh gradient border */}
-      <div
-        className="absolute inset-0 rounded-[inherit] -z-[1]"
-        style={{
-          border: '1px solid transparent',
-          background: [
-            `linear-gradient(${backgroundColor} 0 100%) padding-box`,
-            'linear-gradient(rgb(255 255 255 / 0%) 0% 100%) border-box',
-            ...borderBg,
-          ].join(', '),
-          opacity: borderOpacity,
-          maskImage: `conic-gradient(from ${angleDeg} at center, black ${coneSpread}%, transparent ${coneSpread + 15}%, transparent ${100 - coneSpread - 15}%, black ${100 - coneSpread}%)`,
-          WebkitMaskImage: `conic-gradient(from ${angleDeg} at center, black ${coneSpread}%, transparent ${coneSpread + 15}%, transparent ${100 - coneSpread - 15}%, black ${100 - coneSpread}%)`,
-          transition: isVisible ? 'opacity 0.25s ease-out' : 'opacity 0.75s ease-in-out',
-        }} />
-      {/* mesh gradient fill near edges */}
-      <div
-        className="absolute inset-0 rounded-[inherit] -z-[1]"
-        style={{
-          border: '1px solid transparent',
-          background: fillBg.join(', '),
-          maskImage: [
-            'linear-gradient(to bottom, black, black)',
-            'radial-gradient(ellipse at 50% 50%, black 40%, transparent 65%)',
-            'radial-gradient(ellipse at 66% 66%, black 5%, transparent 40%)',
-            'radial-gradient(ellipse at 33% 33%, black 5%, transparent 40%)',
-            'radial-gradient(ellipse at 66% 33%, black 5%, transparent 40%)',
-            'radial-gradient(ellipse at 33% 66%, black 5%, transparent 40%)',
-            `conic-gradient(from ${angleDeg} at center, transparent 5%, black 15%, black 85%, transparent 95%)`,
-          ].join(', '),
-          WebkitMaskImage: [
-            'linear-gradient(to bottom, black, black)',
-            'radial-gradient(ellipse at 50% 50%, black 40%, transparent 65%)',
-            'radial-gradient(ellipse at 66% 66%, black 5%, transparent 40%)',
-            'radial-gradient(ellipse at 33% 33%, black 5%, transparent 40%)',
-            'radial-gradient(ellipse at 66% 33%, black 5%, transparent 40%)',
-            'radial-gradient(ellipse at 33% 66%, black 5%, transparent 40%)',
-            `conic-gradient(from ${angleDeg} at center, transparent 5%, black 15%, black 85%, transparent 95%)`,
-          ].join(', '),
-          maskComposite: 'subtract, add, add, add, add, add',
-          WebkitMaskComposite: 'source-out, source-over, source-over, source-over, source-over, source-over',
-          opacity: borderOpacity * fillOpacity,
-          mixBlendMode: 'soft-light',
-          transition: isVisible ? 'opacity 0.25s ease-out' : 'opacity 0.75s ease-in-out',
-        }} />
+      
+      <div 
+        className="absolute inset-0 overflow-hidden border border-white/15 rounded-[inherit] -z-[2]"
+        style={{ background: backgroundColor }}
+      >
+          {/* mesh gradient border */}
+          <div
+            ref={borderLayerRef}
+            className="absolute inset-0 rounded-[inherit] z-0 will-change-[opacity,mask-image]"
+            style={{
+              border: '1px solid transparent',
+              background: `linear-gradient(${backgroundColor} 0 100%) padding-box, linear-gradient(rgb(255 255 255 / 0%) 0% 100%) border-box, ${borderBg}`,
+              opacity: 0,
+              transition: 'opacity 0.25s ease-out',
+            }} />
+          {/* mesh gradient fill near edges */}
+          <div
+            ref={fillLayerRef}
+            className="absolute inset-0 rounded-[inherit] z-0 will-change-[opacity,mask-image]"
+            style={{
+              border: '1px solid transparent',
+              background: fillBg,
+              maskComposite: 'subtract, add, add, add, add, add',
+              WebkitMaskComposite: 'source-out, source-over, source-over, source-over, source-over, source-over',
+              opacity: 0,
+              mixBlendMode: 'soft-light',
+              transition: 'opacity 0.25s ease-out',
+            }} />
+      </div>
+
       {/* outer glow */}
       <span
-        className="absolute pointer-events-none z-[1] rounded-[inherit]"
+        ref={glowLayerRef}
+        className="absolute pointer-events-none z-[-1] rounded-[inherit] will-change-[opacity,mask-image]"
         style={{
           inset: `${-glowRadius}px`,
-          maskImage: `conic-gradient(from ${angleDeg} at center, black 2.5%, transparent 10%, transparent 90%, black 97.5%)`,
-          WebkitMaskImage: `conic-gradient(from ${angleDeg} at center, black 2.5%, transparent 10%, transparent 90%, black 97.5%)`,
-          opacity: glowOpacity,
+          opacity: 0,
           mixBlendMode: 'plus-lighter',
-          transition: isVisible ? 'opacity 0.25s ease-out' : 'opacity 0.75s ease-in-out',
+          transition: 'opacity 0.25s ease-out',
         }}>
         <span
           className="absolute rounded-[inherit]"
@@ -224,7 +267,7 @@ const BorderGlow = ({
             boxShadow: buildBoxShadow(glowColor, glowIntensity),
           }} />
       </span>
-      <div className="flex flex-col relative overflow-auto z-[1]">
+      <div className="flex flex-col relative overflow-auto z-[1] h-full w-full">
         {children}
       </div>
     </div>

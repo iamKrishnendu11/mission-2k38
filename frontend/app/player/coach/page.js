@@ -3,10 +3,11 @@
 import { useState, useEffect, useRef } from "react";
 import { api, API_BASE_URL } from "@/lib/api";
 import DashboardLayout from "@/components/DashboardLayout";
-import { Play, Video, Loader, Cpu, BarChart2, ShieldAlert, CheckCircle2, Eye, Activity, AlertTriangle, XCircle, Trash2 } from "lucide-react";
+import { Play, Video, Loader, Cpu, BarChart2, ShieldAlert, CheckCircle2, Eye, Activity, AlertTriangle, XCircle, Trash2, BrainCircuit, History, FileCheck } from "lucide-react";
 import MorphMatrix from "@/components/MorphMatrix";
 import PerformanceGraph from "@/components/PerformanceGraph";
 import ReactMarkdown from "react-markdown";
+import { SlidingButton } from "@/app/login/components/SlidingButton";
 
 export default function AICoachTerminal() {
   const [videos, setVideos] = useState([]);
@@ -192,27 +193,39 @@ export default function AICoachTerminal() {
     <DashboardLayout>
       <div className="max-w-7xl mx-auto flex flex-col lg:h-[calc(100vh-8rem)] overflow-hidden space-y-6">
         {/* HEADER BAR (FIXED) */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-zinc-850 pb-4 shrink-0">
-          <div>
-            <h2 className="text-3xl font-black uppercase text-white tracking-wider">AI Training Terminal</h2>
-            <p className="text-zinc-400 text-xs mt-1 uppercase tracking-widest font-bold">
-              Execute MediaPipe joint tracking and YOLO ball telemetry on uploads
-            </p>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/[0.04] pb-6 shrink-0 pt-2">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-gradient-to-b from-white/[0.06] to-transparent border border-white/[0.05] rounded-2xl flex items-center justify-center shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] shrink-0">
+              <BrainCircuit className="w-7 h-7 text-yellow-400 drop-shadow-md" />
+            </div>
+            <div>
+              <h2 className="text-3xl font-black tracking-tight text-white">AI Training Terminal</h2>
+              <p className="text-white/50 text-sm font-medium mt-0.5">
+                Execute MediaPipe joint tracking and YOLO ball telemetry on uploads
+              </p>
+            </div>
           </div>
         </div>
 
         {/* MAIN TERMINAL GRID (FIXED LAYOUT) */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 flex-1 min-h-0 overflow-hidden">
           {/* SIDEBAR: VIDEO SELECTOR (FIXED) */}
-          <div className="bg-zinc-900/30 border border-zinc-800 rounded-3xl p-6 flex flex-col h-full overflow-hidden shrink-0">
-            <h3 className="text-sm font-bold uppercase tracking-widest text-zinc-400 border-b border-zinc-800 pb-3 shrink-0">
-              Upload History
-            </h3>
+          <div className="bg-[#121214] border border-white/[0.04] rounded-[32px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] p-6 flex flex-col h-full overflow-hidden shrink-0 relative">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.02),transparent_40%)] pointer-events-none" />
+            <div className="relative z-10 flex flex-col h-full overflow-hidden">
+              <div className="flex items-center gap-3 border-b border-white/[0.04] pb-4 mb-2 shrink-0">
+                <div className="w-10 h-10 bg-gradient-to-b from-white/[0.06] to-transparent border border-white/[0.05] rounded-xl flex items-center justify-center shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] shrink-0">
+                  <History className="w-5 h-5 text-yellow-400 drop-shadow-md" />
+                </div>
+                <h3 className="text-lg font-bold tracking-tight text-white">
+                  Upload History
+                </h3>
+              </div>
 
             {loadingVideos ? (
               <div className="text-center py-10 space-y-3 shrink-0">
                 <Loader className="w-6 h-6 animate-spin text-yellow-400 mx-auto" />
-                <span className="text-xs text-zinc-500 font-bold uppercase">Loading Videos...</span>
+                <span className="text-xs text-zinc-500 font-bold tracking-tight">Loading Videos...</span>
               </div>
             ) : videos.length === 0 ? (
               <div className="text-center py-10 text-zinc-500 text-xs shrink-0">
@@ -226,18 +239,18 @@ export default function AICoachTerminal() {
                     onClick={() => handleSelectVideo(vid)}
                     className={`group p-4 rounded-xl border transition-all cursor-pointer flex justify-between items-center ${
                       selectedVideo?._id === vid._id
-                        ? "bg-yellow-400/10 border-yellow-400/80 text-yellow-400 shadow-md"
-                        : "bg-zinc-950/40 border-zinc-900 text-zinc-400 hover:text-white"
+                        ? "bg-yellow-400/5 border-yellow-400/50 text-yellow-400 shadow-[inset_0_1px_1px_rgba(250,204,21,0.1)]"
+                        : "bg-[#0a0a0c] border-white/[0.02] text-white/50 hover:text-white"
                     }`}
                   >
                     <div className="truncate pr-2 flex-1">
-                      <h4 className="font-bold text-xs truncate text-white">{vid.title}</h4>
-                      <span className="text-[9px] uppercase tracking-widest font-bold mt-1 block text-zinc-400">
+                      <h4 className="font-bold text-sm truncate text-white tracking-tight">{vid.title}</h4>
+                      <span className="text-[11px] tracking-tight font-medium mt-0.5 block text-white/40">
                         {vid.drillType}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded border ${
+                      <span className={`text-[10px] font-bold tracking-tight px-2 py-0.5 rounded-md border ${
                         vid.isAnalyzed 
                           ? "bg-green-400/10 text-green-400 border-green-500/20" 
                           : "bg-zinc-900 text-zinc-500 border-zinc-800"
@@ -258,30 +271,24 @@ export default function AICoachTerminal() {
             )}
 
             {selectedVideo && (
-              <div className="p-4 rounded-2xl bg-zinc-950 border border-zinc-850 space-y-4 shrink-0 mt-3">
+              <div className="p-5 rounded-[20px] bg-[#0a0a0c] border border-white/[0.02] space-y-4 shrink-0 mt-3 shadow-[inset_0_1px_1px_rgba(255,255,255,0.02)]">
                 <div>
-                  <span className="text-[9px] uppercase tracking-widest text-zinc-500 font-black">Selected Video</span>
-                  <h4 className="text-white font-bold text-sm truncate">{selectedVideo.title}</h4>
+                  <span className="text-[11px] tracking-tight text-white/50 font-medium mb-1 block">Selected Video</span>
+                  <h4 className="text-white font-bold text-base tracking-tight truncate">{selectedVideo.title}</h4>
                 </div>
-                <button
-                  onClick={handleStartAnalysis}
-                  disabled={analyzing}
-                  className="w-full bg-gradient-to-r from-yellow-400 to-amber-500 text-black font-black uppercase tracking-wider py-3 rounded-xl text-xs hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 shadow-lg"
-                >
-                  {analyzing ? (
-                    <>
-                      <Loader className="w-4 h-4 animate-spin text-black" />
-                      <span>Running AI Telemetry...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Play className="w-4 h-4 text-black fill-black" />
-                      <span>{selectedVideo.isAnalyzed ? "Re-Run AI Analysis" : "Commence AI Analysis"}</span>
-                    </>
-                  )}
-                </button>
+                <div className="w-full flex">
+                  <SlidingButton
+                    onClick={handleStartAnalysis}
+                    disabled={analyzing}
+                    className="w-full h-12 justify-center"
+                    iconPosition="right"
+                  >
+                    {analyzing ? "Running AI Telemetry..." : (selectedVideo.isAnalyzed ? "Re-Run AI Analysis" : "Commence AI Analysis")}
+                  </SlidingButton>
+                </div>
               </div>
             )}
+            </div>
           </div>
 
           {/* RIGHT COLUMN: VIDEO PLAYER + YELLOW LOGS + REPORT (ALL SCROLLABLE TOGETHER) */}
@@ -294,17 +301,22 @@ export default function AICoachTerminal() {
             )}
 
             {/* MONITOR PANEL */}
-            <div className="bg-zinc-950 border border-zinc-800/80 rounded-3xl overflow-hidden shadow-2xl relative shrink-0">
-              <div className="flex justify-between items-center bg-zinc-900/60 px-6 py-4 border-b border-zinc-850">
-                <span className="text-xs uppercase tracking-widest font-black text-white flex items-center gap-2">
-                  <Cpu className="text-yellow-400 w-4 h-4" /> Live AI Engine Telemetry & Video Feed
-                </span>
+            <div className="bg-[#121214] border border-white/[0.04] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] rounded-[32px] overflow-hidden relative shrink-0">
+              <div className="flex justify-between items-center bg-[#0a0a0c] px-6 py-5 border-b border-white/[0.04]">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-b from-white/[0.06] to-transparent border border-white/[0.05] rounded-xl flex items-center justify-center shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] shrink-0">
+                    <Activity className="w-5 h-5 text-yellow-400 drop-shadow-md" />
+                  </div>
+                  <span className="text-lg tracking-tight font-bold text-white">
+                    Live AI Engine Telemetry & Video Feed
+                  </span>
+                </div>
                 {analyzing ? (
-                  <span className="bg-yellow-400 text-black text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full animate-pulse">
+                  <span className="bg-yellow-400 text-black text-[11px] font-bold tracking-tight px-3 py-1 rounded-full animate-pulse">
                     Live Frame Telemetry Feed
                   </span>
                 ) : selectedVideo && (
-                  <span className="bg-green-500/20 text-green-400 border border-green-500/30 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full">
+                  <span className="bg-green-500/20 text-green-400 border border-green-500/30 text-[11px] font-bold tracking-tight px-3 py-1 rounded-full">
                     Video Loaded • Biomechanics Active
                   </span>
                 )}
@@ -353,44 +365,54 @@ export default function AICoachTerminal() {
 
             {/* RESULTS REPORT PANELS */}
             {loadingAnalysis ? (
-              <div className="p-8 bg-zinc-900/30 border border-zinc-800 rounded-3xl text-center space-y-3">
+              <div className="p-8 bg-[#121214] border border-white/[0.04] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] rounded-[32px] text-center space-y-3">
                 <Loader className="w-6 h-6 animate-spin text-yellow-400 mx-auto" />
-                <span className="text-xs text-zinc-500 font-bold uppercase">Loading Analysis Report...</span>
+                <span className="text-xs text-white/40 font-bold tracking-tight">Loading Analysis Report...</span>
               </div>
             ) : analysisResult && (
               <div className="space-y-6">
                 {/* ATTRIBUTES PANEL */}
-                <div className="bg-zinc-900/30 border border-zinc-800 rounded-3xl p-6">
-                      <h3 className="text-xs font-black uppercase tracking-widest text-zinc-400 mb-4 flex items-center gap-2">
-                        <BarChart2 className="text-yellow-400 w-4.5 h-4.5" /> Bio-mechanical Telemetry Results
-                      </h3>
+                <div className="bg-[#121214] border border-white/[0.04] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] rounded-[32px] p-6 md:p-8">
+                      <div className="flex items-center gap-3 mb-6 border-b border-white/[0.04] pb-4">
+                        <div className="w-10 h-10 bg-gradient-to-b from-white/[0.06] to-transparent border border-white/[0.05] rounded-xl flex items-center justify-center shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] shrink-0">
+                          <BarChart2 className="w-5 h-5 text-yellow-400 drop-shadow-md" />
+                        </div>
+                        <h3 className="text-xl tracking-tight font-bold text-white">
+                          Bio-mechanical Telemetry Results
+                        </h3>
+                      </div>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {Object.entries(analysisResult.stats || {}).map(([key, val]) => (
-                          <div key={key} className="bg-zinc-950 p-4 rounded-xl border border-zinc-900">
-                            <span className="block text-[8px] uppercase tracking-widest text-zinc-500 font-bold">{key.replace(/_/g, " ")}</span>
-                            <span className="text-lg font-black text-white">{typeof val === "number" ? val.toFixed(1) : String(val)}</span>
+                          <div key={key} className="bg-[#0a0a0c] p-5 rounded-[20px] border border-white/[0.02] shadow-[inset_0_1px_1px_rgba(255,255,255,0.02)]">
+                            <span className="block text-[11px] tracking-tight text-white/40 font-medium mb-1 capitalize">{key.replace(/_/g, " ")}</span>
+                            <span className="text-2xl font-black text-white">{typeof val === "number" ? val.toFixed(1) : String(val)}</span>
                           </div>
                         ))}
                       </div>
                     </div>
 
                     {/* GEMINI REPORT PANEL */}
-                    <div className="bg-zinc-900/30 border border-zinc-800 rounded-3xl p-6 space-y-4">
-                      <h3 className="text-xs font-black uppercase tracking-widest text-zinc-400 border-b border-zinc-800 pb-3 flex items-center gap-2">
-                        <Cpu className="text-yellow-400 w-4.5 h-4.5" /> Elite Coach AI Verdict & Action Plan
-                      </h3>
-                      <div className="bg-zinc-950/60 p-5 rounded-2xl border border-zinc-850 leading-relaxed text-zinc-300 text-sm font-medium">
+                    <div className="bg-[#121214] border border-white/[0.04] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] rounded-[32px] p-6 md:p-8 space-y-6">
+                      <div className="flex items-center gap-3 border-b border-white/[0.04] pb-4">
+                        <div className="w-10 h-10 bg-gradient-to-b from-white/[0.06] to-transparent border border-white/[0.05] rounded-xl flex items-center justify-center shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] shrink-0">
+                          <FileCheck className="w-5 h-5 text-yellow-400 drop-shadow-md" />
+                        </div>
+                        <h3 className="text-xl tracking-tight font-bold text-white">
+                          Elite Coach AI Verdict & Action Plan
+                        </h3>
+                      </div>
+                      <div className="bg-[#0a0a0c] p-6 rounded-[24px] border border-white/[0.02] leading-relaxed text-white/70 text-sm font-medium shadow-[inset_0_1px_1px_rgba(255,255,255,0.02)]">
                         <ReactMarkdown 
                           components={{
-                            h1: ({node, ...props}) => <h1 className="text-lg font-black text-white uppercase tracking-wider mb-2 mt-4" {...props} />,
-                            h2: ({node, ...props}) => <h2 className="text-md font-bold text-yellow-400 uppercase tracking-wide mb-2 mt-4" {...props} />,
-                            h3: ({node, ...props}) => <h3 className="text-sm font-bold text-white mb-2 mt-3" {...props} />,
-                            p: ({node, ...props}) => <p className="mb-3 last:mb-0 text-zinc-300" {...props} />,
+                            h1: ({node, ...props}) => <h1 className="text-xl font-bold tracking-tight text-white mb-2 mt-4" {...props} />,
+                            h2: ({node, ...props}) => <h2 className="text-lg font-bold tracking-tight text-yellow-400 mb-2 mt-4" {...props} />,
+                            h3: ({node, ...props}) => <h3 className="text-base font-bold tracking-tight text-white mb-2 mt-3" {...props} />,
+                            p: ({node, ...props}) => <p className="mb-3 last:mb-0 text-white/70" {...props} />,
                             ul: ({node, ...props}) => <ul className="list-disc pl-5 mb-3 space-y-1 marker:text-yellow-400" {...props} />,
                             ol: ({node, ...props}) => <ol className="list-decimal pl-5 mb-3 space-y-1 marker:text-yellow-400" {...props} />,
-                            li: ({node, ...props}) => <li className="text-zinc-300" {...props} />,
+                            li: ({node, ...props}) => <li className="text-white/70" {...props} />,
                             strong: ({node, ...props}) => <strong className="text-yellow-400 font-bold" {...props} />,
-                            blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-yellow-400 pl-3 italic text-zinc-400 mb-3" {...props} />,
+                            blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-yellow-400 pl-3 italic text-white/50 mb-3" {...props} />,
                           }}
                         >
                           {analysisResult.report}

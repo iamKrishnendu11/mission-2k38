@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import DashboardLayout from "@/components/DashboardLayout";
 import PlayerInspectModal from "@/components/PlayerInspectModal";
-import { Star, MessageSquare, ShieldCheck, MapPin, Trash2, Calendar } from "lucide-react";
+import { Star, MessageSquare, ShieldCheck, MapPin, Trash2, Calendar, User } from "lucide-react";
+import { SlidingButton } from "@/app/login/components/SlidingButton";
 
 export default function ScoutSavedPlayers() {
   const router = useRouter();
@@ -53,20 +54,22 @@ export default function ScoutSavedPlayers() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-7xl mx-auto space-y-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-zinc-850 pb-6">
+      <div className="max-w-5xl mx-auto space-y-8 px-4 md:px-0">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/[0.04] pb-6 pt-10">
           <div>
-            <h2 className="text-3xl font-black uppercase text-white tracking-wider">Saved Prospects</h2>
-            <p className="text-zinc-400 text-xs mt-1 uppercase tracking-widest font-bold">
+            <h2 className="text-3xl font-black text-white tracking-tight flex items-center gap-3">
+              Saved Prospects
+            </h2>
+            <p className="text-white/50 text-sm mt-1 font-medium">
               Bookmarked talent pool for evaluation and trial invitations
             </p>
           </div>
-          <button
+          <SlidingButton
             onClick={() => router.push("/scout/search")}
-            className="bg-yellow-400 text-black font-black uppercase text-xs px-5 py-2.5 rounded-xl hover:scale-105 transition-all shadow-md"
+            className="h-14 px-8 font-black uppercase tracking-widest text-sm"
           >
             + Find More Talent
-          </button>
+          </SlidingButton>
         </div>
 
         {loading ? (
@@ -75,69 +78,77 @@ export default function ScoutSavedPlayers() {
             <span className="text-xs text-zinc-500 uppercase tracking-widest font-bold">Loading Saved Prospects...</span>
           </div>
         ) : players.length === 0 ? (
-          <div className="p-12 bg-zinc-900/35 border border-zinc-800 rounded-3xl text-center text-zinc-500 text-xs space-y-3">
-            <p>You haven't saved any player profiles yet. Use the Talent Search to bookmark prospects!</p>
-            <button
+          <div className="py-24 flex flex-col items-center justify-center text-center bg-[#121214] border border-white/[0.04] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] rounded-[32px]">
+            <div className="w-14 h-14 bg-white/[0.02] border border-white/[0.05] rounded-full flex items-center justify-center mb-4">
+              <Star className="w-6 h-6 text-white/20" />
+            </div>
+            <h4 className="text-sm font-bold text-white/70 mb-1">No Saved Profiles</h4>
+            <p className="text-xs font-medium text-white/40 max-w-sm mb-6">You haven't saved any player profiles yet. Use the Talent Search to bookmark prospects!</p>
+            <SlidingButton
               onClick={() => router.push("/scout/search")}
-              className="text-yellow-400 font-bold uppercase hover:underline"
+              className="h-12 px-6 font-black uppercase tracking-widest text-[11px]"
             >
-              Go to Talent Search →
-            </button>
+              Go to Talent Search
+            </SlidingButton>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {players.map((p) => {
               const uId = p.user?._id || p.user || p._id;
               return (
-                <div key={p._id} className="bg-zinc-900/40 border border-zinc-800 hover:border-yellow-400/60 rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden group transition-all">
+                <div key={p._id} className="bg-[#121214] border border-white/[0.04] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] hover:border-yellow-400/40 rounded-[24px] p-6 flex flex-col justify-between relative overflow-hidden group transition-all">
                   {/* Clickable Header & Details */}
                   <div className="cursor-pointer" onClick={() => setInspectingPlayer(p)}>
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="w-14 h-14 rounded-full overflow-hidden border border-zinc-700 bg-zinc-950 shrink-0 group-hover:border-yellow-400 transition-all">
-                        <img src={p.profilePhoto || "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=150"} alt="Player" className="w-full h-full object-cover" />
+                    <div className="flex justify-between items-start mb-5">
+                      <div className="w-14 h-14 rounded-full overflow-hidden border border-white/[0.05] bg-white/[0.02] shrink-0 group-hover:scale-110 transition-transform flex items-center justify-center">
+                        {p.profilePhoto && !p.profilePhoto.includes("undefined") && !p.profilePhoto.includes("null") ? (
+                          <img src={p.profilePhoto} alt="Player" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+                        ) : (
+                          <User className="w-6 h-6 text-white/20" />
+                        )}
                       </div>
-                      <div className="bg-zinc-950 px-3 py-1.5 rounded-lg border border-zinc-850 text-center shrink-0">
-                        <span className="block text-[8px] uppercase font-black text-zinc-500">Score</span>
+                      <div className="bg-[#0a0a0c] px-3 py-1.5 rounded-xl border border-white/[0.04] text-center shrink-0">
+                        <span className="block text-[9px] uppercase font-bold tracking-widest text-white/40">AI Score</span>
                         <span className="text-sm font-black text-yellow-400">
                           {(p.skills?.scoutRatingsCount || 0) > 0 ? (p.skills?.aiScore || p.skills?.scoutScore || 0) : 0}
                         </span>
                       </div>
                     </div>
 
-                    <h4 className="text-white font-bold text-base truncate flex items-center gap-1 group-hover:text-yellow-400 transition-colors">
+                    <h4 className="text-white font-bold text-base truncate flex items-center gap-1.5 group-hover:text-yellow-400 transition-colors">
                       {p.name}
                       {p.verifiedBadge && <ShieldCheck className="w-4 h-4 text-blue-400 shrink-0" />}
                     </h4>
-                    <p className="text-[10px] text-yellow-400/90 font-bold uppercase tracking-wider mt-1">
-                      {p.preferredPosition} • {p.ageCategory || "Senior"}
+                    <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mt-1">
+                      <span className="text-white/70">{p.preferredPosition}</span> • <span className="text-white/70">{p.ageCategory || "Senior"}</span>
                     </p>
                     {(p.city || p.state) && (
-                      <p className="text-[10px] text-zinc-500 uppercase font-bold mt-1 flex items-center gap-1">
-                        <MapPin className="w-3 h-3 text-zinc-600" />
+                      <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mt-1 flex items-center gap-1">
+                        <MapPin className="w-3 h-3 text-white/30" />
                         {[p.city, p.state].filter(Boolean).join(", ")}
                       </p>
                     )}
                   </div>
 
-                  <div className="mt-6 pt-4 border-t border-zinc-850 flex flex-col gap-2">
+                  <div className="mt-6 pt-5 border-t border-white/[0.04] flex flex-col gap-2">
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleStartChat(uId)}
-                        className="flex-1 bg-zinc-950 hover:bg-zinc-900 text-yellow-400 font-bold uppercase tracking-wider py-2.5 rounded-xl border border-zinc-800 text-[10px] transition-all flex items-center justify-center gap-1.5"
+                        className="flex-1 bg-[#0a0a0c] hover:bg-white/[0.02] text-yellow-400 font-bold uppercase tracking-wider py-2.5 rounded-xl border border-white/[0.04] text-[10px] transition-all flex items-center justify-center gap-1.5"
                       >
                         <MessageSquare className="w-3.5 h-3.5" /> Chat
                       </button>
                       <button
                         onClick={() => setInspectingPlayer(p)}
-                        className="flex-1 bg-gradient-to-r from-yellow-400 to-amber-500 text-black font-black uppercase tracking-wider py-2.5 rounded-xl text-[10px] transition-all flex items-center justify-center gap-1 hover:scale-105"
+                        className="flex-1 bg-yellow-400 text-black font-black uppercase tracking-wider py-2.5 rounded-xl text-[10px] transition-all flex items-center justify-center gap-1 hover:scale-105 shadow-md"
                       >
-                        Inspect Profile
+                        Inspect
                       </button>
                     </div>
 
                     <button
                       onClick={() => handleUnsavePlayer(uId)}
-                      className="w-full text-zinc-500 hover:text-red-400 text-[10px] font-bold uppercase py-1 flex items-center justify-center gap-1 transition-colors"
+                      className="w-full text-white/40 hover:text-red-400 text-[10px] font-bold uppercase py-1 mt-1 flex items-center justify-center gap-1 transition-colors"
                     >
                       <Trash2 className="w-3 h-3" /> Remove from Saved
                     </button>

@@ -15,6 +15,7 @@ export const metadata = {
   description: "An Indian Football Upliftment Platform. Empowering players, coaches, and scouts with data-driven analytics and world-class management.",
 };
 
+import Script from "next/script";
 import SmoothScroll from "@/components/ui/SmoothScroll";
 
 export default function RootLayout({ children }) {
@@ -24,6 +25,7 @@ export default function RootLayout({ children }) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
     >
       <body className="min-h-full flex flex-col bg-black text-zinc-100">
+        <Script src="https://cdn.lordicon.com/lordicon.js" strategy="lazyOnload" />
         <SmoothScroll>
           {children}
         </SmoothScroll>

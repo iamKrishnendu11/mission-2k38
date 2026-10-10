@@ -369,11 +369,11 @@ export default function PlayerMessages() {
       <div className="max-w-7xl mx-auto h-[78vh] flex gap-6 md:gap-8">
         
         {/* CONVERSATIONS SIDEBAR */}
-        <div className="w-80 bg-zinc-900/40 border border-zinc-800 rounded-3xl p-5 flex flex-col justify-between shrink-0 shadow-xl">
+        <div className="w-80 bg-[#121214] border border-white/[0.04] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] rounded-3xl p-5 flex flex-col justify-between shrink-0 shadow-xl">
           <div className="space-y-4 flex-1 flex flex-col min-h-0">
             
-            <div className="flex justify-between items-center border-b border-zinc-800 pb-3">
-              <h3 className="text-xs font-black uppercase tracking-widest text-zinc-300">
+            <div className="flex justify-between items-center border-b border-white/[0.04] pb-3">
+              <h3 className="text-xs font-bold text-sm tracking-tight text-white/70">
                 Conversations
               </h3>
               <button
@@ -389,10 +389,10 @@ export default function PlayerMessages() {
             {loadingChats ? (
               <div className="text-center py-10 space-y-3">
                 <Loader className="w-5 h-5 animate-spin text-yellow-400 mx-auto" />
-                <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest block">Loading Messages...</span>
+                <span className="text-[10px] text-white/40 font-bold text-sm tracking-tight block">Loading Messages...</span>
               </div>
             ) : chats.length === 0 ? (
-              <div className="text-center py-10 text-zinc-500 text-xs space-y-3">
+              <div className="text-center py-10 text-white/40 text-xs space-y-3">
                 <MessageSquare className="w-8 h-8 text-zinc-700 mx-auto stroke-1" />
                 <p>No active conversations yet.</p>
                 <button
@@ -419,7 +419,7 @@ export default function PlayerMessages() {
                           ? "bg-yellow-400/10 border-yellow-400/80 text-yellow-400 shadow-md"
                           : hasUnread
                           ? "bg-emerald-950/30 border-emerald-500/80 text-white shadow-[0_0_15px_rgba(16,185,129,0.2)]"
-                          : "bg-zinc-950/40 border-zinc-850/80 text-zinc-400 hover:text-white hover:border-zinc-700"
+                          : "bg-zinc-950/40 border-white/[0.04]/80 text-white/50 hover:text-white hover:border-zinc-700"
                       }`}
                     >
                       <div className="w-10 h-10 rounded-full overflow-hidden bg-zinc-800 border border-zinc-700 shrink-0">
@@ -437,7 +437,7 @@ export default function PlayerMessages() {
                           </h4>
                           <div className="flex items-center gap-1.5">
                             {otherUser.role && (
-                              <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-zinc-900 text-zinc-500 border border-zinc-800">
+                              <span className="text-[8px] font-bold text-sm tracking-tight px-1.5 py-0.5 rounded bg-zinc-900 text-white/40 border border-white/[0.04]">
                                 {otherUser.role}
                               </span>
                             )}
@@ -448,7 +448,7 @@ export default function PlayerMessages() {
                             )}
                           </div>
                         </div>
-                        <p className={`text-[10px] truncate mt-1 ${hasUnread ? "text-emerald-400 font-bold" : "text-zinc-500 font-medium"}`}>
+                        <p className={`text-[10px] truncate mt-1 ${hasUnread ? "text-emerald-400 font-bold" : "text-white/40 font-medium"}`}>
                           {c.lastMessage || "No messages yet"}
                         </p>
                       </div>
@@ -461,11 +461,11 @@ export default function PlayerMessages() {
         </div>
 
         {/* MESSAGING BOX */}
-        <div className="flex-1 bg-zinc-950 border border-zinc-800 rounded-3xl flex flex-col justify-between overflow-hidden shadow-2xl relative">
+        <div className="flex-1 bg-[#0a0a0c] border border-white/[0.02] rounded-3xl flex flex-col justify-between overflow-hidden shadow-2xl relative">
           {selectedChat ? (
             <>
               {/* Header */}
-              <div className="flex justify-between items-center bg-zinc-900/30 px-6 py-4 border-b border-zinc-850">
+              <div className="flex justify-between items-center bg-zinc-900/30 px-6 py-4 border-b border-white/[0.04]">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 rounded-full overflow-hidden border border-zinc-700 bg-zinc-900">
                     <img 
@@ -479,7 +479,7 @@ export default function PlayerMessages() {
                       {selectedChat.otherProfile?.name || selectedChat.otherUser?.email?.split('@')[0] || "User"}
                       {selectedChat.otherProfile?.verifiedBadge && <ShieldCheck className="w-4 h-4 text-blue-400" />}
                     </h4>
-                    <span className="text-[9px] uppercase tracking-widest text-zinc-500 font-bold block mt-0.5">
+                    <span className="text-[9px] uppercase tracking-widest text-white/40 font-bold block mt-0.5">
                       {selectedChat.otherUser?.role || 'Member'} {partnerTyping && `• ${partnerTyping}`}
                     </span>
                   </div>
@@ -523,7 +523,7 @@ export default function PlayerMessages() {
                         <div className={`max-w-md p-3.5 rounded-2xl text-xs leading-relaxed space-y-2 shadow-md ${
                           isOwn 
                             ? "bg-gradient-to-r from-yellow-400 to-amber-500 text-black font-semibold rounded-tr-none" 
-                            : "bg-zinc-900 border border-zinc-800 text-zinc-200 rounded-tl-none"
+                            : "bg-zinc-900 border border-white/[0.04] text-zinc-200 rounded-tl-none"
                         }`}>
                           
                           {/* Image Attachment Rendering */}
@@ -560,7 +560,7 @@ export default function PlayerMessages() {
                           {/* Text Message */}
                           {m.text && <p className="whitespace-pre-wrap">{m.text}</p>}
 
-                          <div className={`flex items-center justify-end gap-1 text-[8px] font-black uppercase mt-1 ${isOwn ? "text-black/70" : "text-zinc-500"}`}>
+                          <div className={`flex items-center justify-end gap-1 text-[8px] font-black uppercase mt-1 ${isOwn ? "text-black/70" : "text-white/40"}`}>
                             <span>{new Date(m.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                             {isOwn && (
                               <span>{m.seen ? "✓✓" : "✓"}</span>
@@ -576,7 +576,7 @@ export default function PlayerMessages() {
 
               {/* MEDIA PREVIEW CONTAINER BEFORE SENDING */}
               {selectedFile && (
-                <div className="px-6 py-3 bg-zinc-900 border-t border-zinc-800 flex items-center justify-between">
+                <div className="px-6 py-3 bg-zinc-900 border-t border-white/[0.04] flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     {mediaType === "image" ? (
                       <img src={mediaPreviewUrl} alt="Preview" className="w-12 h-12 object-cover rounded-lg border border-zinc-700" />
@@ -595,7 +595,7 @@ export default function PlayerMessages() {
                   <button
                     type="button"
                     onClick={handleClearSelectedFile}
-                    className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800"
+                    className="p-1.5 text-white/50 hover:text-white rounded-lg hover:bg-zinc-800"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -603,7 +603,7 @@ export default function PlayerMessages() {
               )}
 
               {/* CHAT INPUT FORM */}
-              <form onSubmit={handleSendMessage} className="p-4 border-t border-zinc-850 bg-zinc-900/20 flex items-center gap-3">
+              <form onSubmit={handleSendMessage} className="p-4 border-t border-white/[0.04] bg-zinc-900/20 flex items-center gap-3">
                 {/* Hidden File Input */}
                 <input
                   type="file"
@@ -620,7 +620,7 @@ export default function PlayerMessages() {
                   className={`p-3.5 rounded-xl border transition-all ${
                     selectedFile
                       ? "bg-yellow-400/20 border-yellow-400 text-yellow-400"
-                      : "bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700"
+                      : "bg-zinc-950 border-white/[0.04] text-white/50 hover:text-white hover:border-zinc-700"
                   }`}
                   title="Attach Image or Video"
                 >
@@ -633,7 +633,7 @@ export default function PlayerMessages() {
                   placeholder={selectedFile ? "Add a caption for your media..." : "Type your message..."}
                   value={newMessageText}
                   onChange={handleTyping}
-                  className="flex-1 bg-zinc-950 border border-zinc-850 focus:border-yellow-400 focus:outline-none rounded-xl p-4 text-xs text-white"
+                  className="flex-1 bg-zinc-950 border border-white/[0.04] focus:border-yellow-400 focus:outline-none rounded-xl p-4 text-xs text-white"
                 />
 
                 {/* Submit Button */}
@@ -655,12 +655,12 @@ export default function PlayerMessages() {
               <MessageSquare className="w-16 h-16 stroke-1 text-zinc-700" />
               <div>
                 <h4 className="text-white font-bold text-sm uppercase tracking-wider">Select or Start a Conversation</h4>
-                <p className="text-zinc-500 text-xs mt-1 max-w-sm mx-auto">
+                <p className="text-white/40 text-xs mt-1 max-w-sm mx-auto">
                   Players, Scouts, and Coaches can directly send text messages, image clips, and video highlights.
                 </p>
                 <button
                   onClick={() => setShowSearchModal(true)}
-                  className="mt-4 bg-yellow-400 hover:bg-yellow-500 text-black px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider shadow-lg transition-all"
+                  className="mt-4 bg-yellow-400 hover:bg-yellow-500 text-black px-6 py-2.5 rounded-xl text-xs font-bold text-sm tracking-tight shadow-lg transition-all"
                 >
                   + Start New Chat
                 </button>
@@ -673,19 +673,19 @@ export default function PlayerMessages() {
       {/* USER DISCOVERY & NEW CHAT MODAL */}
       {showSearchModal && (
         <div data-lenis-prevent className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <div data-lenis-prevent className="bg-zinc-950 border border-zinc-800 rounded-3xl p-6 max-w-lg w-full space-y-5 shadow-2xl relative my-auto max-h-[85vh] flex flex-col">
-            <div className="flex justify-between items-center border-b border-zinc-850 pb-3">
+          <div data-lenis-prevent className="bg-[#0a0a0c] border border-white/[0.02] rounded-3xl p-6 max-w-lg w-full space-y-5 shadow-2xl relative my-auto max-h-[85vh] flex flex-col">
+            <div className="flex justify-between items-center border-b border-white/[0.04] pb-3">
               <div>
                 <h3 className="text-base font-black uppercase text-white tracking-wider flex items-center gap-2">
                   <User className="w-4 h-4 text-yellow-400" /> Discover Players & Scouts
                 </h3>
-                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-0.5">
+                <p className="text-[10px] text-white/40 font-bold text-sm tracking-tight mt-0.5">
                   Select anyone to initiate a direct conversation
                 </p>
               </div>
               <button
                 onClick={() => setShowSearchModal(false)}
-                className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-900"
+                className="p-1.5 text-white/50 hover:text-white rounded-lg hover:bg-zinc-900"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -693,26 +693,26 @@ export default function PlayerMessages() {
 
             {/* Search Input */}
             <div className="relative">
-              <Search className="w-4 h-4 text-zinc-500 absolute left-3.5 top-3.5" />
+              <Search className="w-4 h-4 text-white/40 absolute left-3.5 top-3.5" />
               <input
                 type="text"
                 placeholder="Search by name, position, or club..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="w-full bg-zinc-900 border border-zinc-800 focus:border-yellow-400 focus:outline-none rounded-xl pl-10 pr-4 py-3 text-xs text-white"
+                className="w-full bg-zinc-900 border border-white/[0.04] focus:border-yellow-400 focus:outline-none rounded-xl pl-10 pr-4 py-3 text-xs text-white"
               />
             </div>
 
             {/* Role Filter Tabs */}
-            <div className="flex gap-2 border-b border-zinc-850 pb-3">
+            <div className="flex gap-2 border-b border-white/[0.04] pb-3">
               {['all', 'player', 'scout', 'coach'].map(r => (
                 <button
                   key={r}
                   onClick={() => setRoleFilter(r)}
-                  className={`px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider transition-all ${
+                  className={`px-3 py-1 rounded-lg text-xs font-bold text-sm tracking-tight transition-all ${
                     roleFilter === r
                       ? "bg-yellow-400 text-black"
-                      : "bg-zinc-900 text-zinc-400 hover:text-white"
+                      : "bg-zinc-900 text-white/50 hover:text-white"
                   }`}
                 >
                   {r}
@@ -727,7 +727,7 @@ export default function PlayerMessages() {
                   <Loader className="w-5 h-5 animate-spin text-yellow-400 mx-auto" />
                 </div>
               ) : searchResults.length === 0 ? (
-                <div className="text-center py-8 text-zinc-500 text-xs">
+                <div className="text-center py-8 text-white/40 text-xs">
                   No matching players or scouts found.
                 </div>
               ) : (
@@ -735,7 +735,7 @@ export default function PlayerMessages() {
                   <div
                     key={u.userId}
                     onClick={() => handleStartChatWithUser(u.userId)}
-                    className="p-3.5 rounded-2xl bg-zinc-900/60 border border-zinc-850 hover:border-yellow-400/80 hover:bg-zinc-900 flex items-center justify-between cursor-pointer transition-all group"
+                    className="p-3.5 rounded-2xl bg-zinc-900/60 border border-white/[0.04] hover:border-yellow-400/80 hover:bg-zinc-900 flex items-center justify-between cursor-pointer transition-all group"
                   >
                     <div className="flex items-center gap-3 truncate">
                       <div className="w-10 h-10 rounded-full bg-zinc-800 border border-zinc-700 overflow-hidden shrink-0 group-hover:border-yellow-400">
@@ -745,12 +745,12 @@ export default function PlayerMessages() {
                         <h4 className="font-bold text-xs text-white group-hover:text-yellow-400 transition-colors flex items-center gap-1.5 truncate">
                           {u.name}
                         </h4>
-                        <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold block">
+                        <span className="text-[9px] uppercase tracking-wider text-white/40 font-bold block">
                           {u.role} {u.preferredPosition && `• ${u.preferredPosition}`} {u.city && `• ${u.city}`}
                         </span>
                       </div>
                     </div>
-                    <span className="text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-xl bg-yellow-400/10 border border-yellow-400/30 text-yellow-400 group-hover:bg-yellow-400 group-hover:text-black transition-all">
+                    <span className="text-[10px] font-bold text-sm tracking-tight px-3 py-1 rounded-xl bg-yellow-400/10 border border-yellow-400/30 text-yellow-400 group-hover:bg-yellow-400 group-hover:text-black transition-all">
                       Chat →
                     </span>
                   </div>

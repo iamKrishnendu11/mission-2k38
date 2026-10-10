@@ -6,8 +6,9 @@ import { api } from "@/lib/api";
 import DashboardLayout from "@/components/DashboardLayout";
 import { 
   Search, Star, Calendar, MessageSquare, ShieldCheck, 
-  MapPin, X, ArrowRight, UserPlus, Sliders, CheckCircle2 
+  MapPin, X, ArrowRight, UserPlus, Sliders, CheckCircle2, User 
 } from "lucide-react";
+import { SlidingButton } from "@/app/login/components/SlidingButton";
 import PlayerInspectModal from "@/components/PlayerInspectModal";
 
 export default function ScoutSearch() {
@@ -132,75 +133,75 @@ export default function ScoutSearch() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-7xl mx-auto space-y-8 relative">
-        <div className="flex justify-between items-center mb-4 border-b border-zinc-850 pb-4">
+      <div className="max-w-5xl mx-auto space-y-8 relative px-4 md:px-0">
+        <div className="flex justify-between items-center mb-4 border-b border-white/[0.04] pb-6 pt-10">
           <div>
-            <h2 className="text-3xl font-black uppercase text-white tracking-wider">
-              Talent Search Engine
+            <h2 className="text-3xl font-black text-white tracking-tight flex items-center gap-3">
+              <Search className="w-6 h-6 text-yellow-400 drop-shadow-md" /> Talent Search Engine
             </h2>
-            <p className="text-zinc-400 text-xs mt-1 uppercase tracking-widest font-bold">
+            <p className="text-white/50 text-sm mt-1 font-medium">
               Filter through state registered sub-junior academy players
             </p>
           </div>
         </div>
 
         {/* SEARCH AND FILTERS TOOLBAR */}
-        <div className="bg-zinc-900/30 border border-zinc-800 rounded-3xl p-6 backdrop-blur-xl space-y-6">
-          <div className="flex gap-4">
+        <div className="bg-[#121214] border border-white/[0.04] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] rounded-[32px] p-8 md:p-10 backdrop-blur-xl space-y-8">
+          <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-4 top-4.5 w-5 h-5 text-zinc-500" />
+              <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
               <input
                 type="text"
                 name="queryText"
                 placeholder="Search players by name..."
                 value={filters.queryText}
                 onChange={handleFilterChange}
-                className="w-full bg-zinc-950 border border-zinc-850 focus:border-yellow-400 focus:outline-none rounded-xl py-4 pl-12 pr-4 text-sm text-white"
+                className="w-full bg-[#0a0a0c] border border-white/[0.04] focus:border-yellow-400/50 focus:outline-none rounded-[20px] py-4 pl-14 pr-4 text-sm text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
               />
             </div>
-            <button
+            <SlidingButton
               onClick={executeSearch}
-              className="bg-yellow-400 hover:bg-yellow-500 text-black font-black uppercase tracking-wider px-8 rounded-xl text-xs transition-all shrink-0"
+              className="h-14 px-10 font-black uppercase tracking-widest text-sm w-full md:w-auto"
             >
               Search
-            </button>
+            </SlidingButton>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 border-t border-zinc-850 pt-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6 border-t border-white/[0.04] pt-8">
             <div>
-              <label className="block text-[10px] uppercase text-zinc-500 font-bold mb-1">State</label>
+              <label className="block text-[11px] uppercase tracking-widest text-white/50 font-bold mb-2">State</label>
               <input type="text" name="state" placeholder="Delhi" value={filters.state} onChange={handleFilterChange}
-                className="w-full bg-zinc-950 border border-zinc-900 rounded p-2 text-xs text-white" />
+                className="w-full bg-[#0a0a0c] border border-white/[0.04] rounded-xl p-3 text-sm text-white focus:border-yellow-400/50 focus:outline-none" />
             </div>
             
             <div>
-              <label className="block text-[10px] uppercase text-zinc-500 font-bold mb-1">Position</label>
+              <label className="block text-[11px] uppercase tracking-widest text-white/50 font-bold mb-2">Position</label>
               <input type="text" name="position" placeholder="CF" value={filters.position} onChange={handleFilterChange}
-                className="w-full bg-zinc-950 border border-zinc-900 rounded p-2 text-xs text-white" />
+                className="w-full bg-[#0a0a0c] border border-white/[0.04] rounded-xl p-3 text-sm text-white focus:border-yellow-400/50 focus:outline-none" />
             </div>
 
             <div>
-              <label className="block text-[10px] uppercase text-zinc-500 font-bold mb-1">Min Age</label>
+              <label className="block text-[11px] uppercase tracking-widest text-white/50 font-bold mb-2">Min Age</label>
               <input type="number" name="minAge" value={filters.minAge} onChange={handleFilterChange}
-                className="w-full bg-zinc-950 border border-zinc-900 rounded p-2 text-xs text-white" />
+                className="w-full bg-[#0a0a0c] border border-white/[0.04] rounded-xl p-3 text-sm text-white focus:border-yellow-400/50 focus:outline-none" />
             </div>
 
             <div>
-              <label className="block text-[10px] uppercase text-zinc-500 font-bold mb-1">Max Age</label>
+              <label className="block text-[11px] uppercase tracking-widest text-white/50 font-bold mb-2">Max Age</label>
               <input type="number" name="maxAge" value={filters.maxAge} onChange={handleFilterChange}
-                className="w-full bg-zinc-950 border border-zinc-900 rounded p-2 text-xs text-white" />
+                className="w-full bg-[#0a0a0c] border border-white/[0.04] rounded-xl p-3 text-sm text-white focus:border-yellow-400/50 focus:outline-none" />
             </div>
 
             <div>
-              <label className="block text-[10px] uppercase text-zinc-500 font-bold mb-1">Min AI Score</label>
+              <label className="block text-[11px] uppercase tracking-widest text-white/50 font-bold mb-2">Min AI Score</label>
               <input type="number" name="minAiScore" placeholder="60" value={filters.minAiScore} onChange={handleFilterChange}
-                className="w-full bg-zinc-950 border border-zinc-900 rounded p-2 text-xs text-white" />
+                className="w-full bg-[#0a0a0c] border border-white/[0.04] rounded-xl p-3 text-sm text-white focus:border-yellow-400/50 focus:outline-none" />
             </div>
 
-            <div className="flex items-center pt-5">
-              <label className="flex items-center space-x-2 text-xs text-zinc-400 cursor-pointer">
+            <div className="flex items-center pt-6">
+              <label className="flex items-center space-x-3 text-xs font-bold uppercase tracking-widest text-white/50 cursor-pointer hover:text-white transition-colors">
                 <input type="checkbox" name="verifiedOnly" checked={filters.verifiedOnly} onChange={handleFilterChange}
-                  className="rounded border-zinc-800 bg-zinc-950 text-yellow-400 focus:ring-yellow-400" />
+                  className="rounded border-white/[0.1] bg-[#0a0a0c] text-yellow-400 focus:ring-yellow-400 focus:ring-offset-0 w-5 h-5" />
                 <span>Verified Only</span>
               </label>
             </div>
@@ -214,8 +215,12 @@ export default function ScoutSearch() {
             <span className="text-xs text-zinc-550 uppercase tracking-widest font-bold">Scanning database...</span>
           </div>
         ) : players.length === 0 ? (
-          <div className="p-12 bg-zinc-900/20 border border-zinc-805 rounded-3xl text-center text-zinc-500 text-xs">
-            No talent cards matched your query. Adjust criteria range parameters!
+          <div className="py-24 flex flex-col items-center justify-center text-center">
+            <div className="w-14 h-14 bg-white/[0.02] border border-white/[0.05] rounded-full flex items-center justify-center mb-4">
+              <Search className="w-6 h-6 text-white/20" />
+            </div>
+            <h4 className="text-sm font-bold text-white/70 mb-1">No Players Found</h4>
+            <p className="text-xs font-medium text-white/40 max-w-sm">No talent cards matched your query. Adjust criteria range parameters!</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -223,39 +228,37 @@ export default function ScoutSearch() {
               <div 
                 key={player._id} 
                 onClick={() => setSelectedPlayer(player)}
-                className="bg-zinc-900/40 border border-zinc-800 hover:border-yellow-400/40 rounded-2xl p-6 transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col justify-between"
+                className="bg-[#121214] border border-white/[0.04] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] hover:border-yellow-400/40 rounded-[24px] p-6 transition-all duration-200 cursor-pointer relative overflow-hidden flex flex-col justify-between group"
               >
                 <div>
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="w-12 h-12 rounded-full overflow-hidden border border-zinc-800 bg-zinc-950 shrink-0 flex items-center justify-center">
-                      {player.profilePhoto ? (
-                        <img src={player.profilePhoto} alt="Player" className="w-full h-full object-cover" />
+                  <div className="flex justify-between items-start mb-5">
+                    <div className="w-14 h-14 rounded-full overflow-hidden border border-white/[0.05] bg-white/[0.02] shrink-0 flex items-center justify-center">
+                      {player.profilePhoto && !player.profilePhoto.includes("undefined") && !player.profilePhoto.includes("null") ? (
+                        <img src={player.profilePhoto} alt="Player" className="w-full h-full object-cover group-hover:scale-110 transition-transform" onError={(e) => { e.target.style.display = 'none'; }} />
                       ) : (
-                        <span className="text-xl font-black uppercase text-yellow-400">
-                          {(player.name || "P").charAt(0)}
-                        </span>
+                        <User className="w-6 h-6 text-white/20" />
                       )}
                     </div>
                     
                     {/* FUT Score */}
-                    <div className="bg-zinc-950 px-3 py-1.5 rounded-lg border border-zinc-850 text-center shrink-0">
-                      <span className="block text-[8px] uppercase font-black text-zinc-500 font-mono">Score</span>
+                    <div className="bg-[#0a0a0c] px-3 py-1.5 rounded-xl border border-white/[0.04] text-center shrink-0">
+                      <span className="block text-[9px] uppercase font-bold tracking-widest text-white/40">AI Score</span>
                       <span className="text-sm font-black text-yellow-400">
                         {(player.skills?.scoutRatingsCount || 0) > 0 ? (player.skills?.aiScore || player.skills?.scoutScore || 0) : 0}
                       </span>
                     </div>
                   </div>
 
-                  <h4 className="text-white font-bold text-sm truncate flex items-center gap-1">
+                  <h4 className="text-white font-bold text-base truncate flex items-center gap-1.5">
                     {player.name}
                     {player.verifiedBadge && <ShieldCheck className="w-4 h-4 text-blue-400" />}
                   </h4>
-                  <p className="text-[10px] text-zinc-500 uppercase tracking-wider mt-1">
-                    Pos: {player.preferredPosition} • Foot: {player.dominantFoot}
+                  <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mt-1">
+                    Pos: <span className="text-white/70">{player.preferredPosition}</span> • Foot: <span className="text-white/70">{player.dominantFoot}</span>
                   </p>
                 </div>
 
-                <div className="mt-6 border-t border-zinc-850 pt-4 flex justify-between items-center text-[10px] text-zinc-500 font-bold uppercase">
+                <div className="mt-6 border-t border-white/[0.04] pt-5 flex justify-between items-center text-[10px] text-white/40 font-bold uppercase tracking-widest">
                   <span>{player.city}, {player.state}</span>
                   <span className="text-yellow-400">
                     Potential: {(player.skills?.scoutRatingsCount || 0) > 0 ? (player.skills?.potential || 0) : 0}
